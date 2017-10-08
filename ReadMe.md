@@ -1,1 +1,1 @@
-Simple draw program allows user to create shapes using the chaos game.  
+Simple draw program allows user to create fractal shapes using the chaos game.  
