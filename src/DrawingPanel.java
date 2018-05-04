@@ -9,7 +9,9 @@ class DrawingPanel extends JPanel {
     static final int MARGIN = 100;
 
     DrawingPanel(CanvasPanel canvasPanel){
+        super();
         this.canvasPanel = canvasPanel;
+        this.setBackground(Largest.BACKGROUND);
         MyMouseListener ml = new MyMouseListener();
         addMouseListener(ml);
         addMouseMotionListener(ml);
@@ -65,16 +67,9 @@ class DrawingPanel extends JPanel {
         c.weightx = 0.0;
         c.weighty = 0.0;
         add(canvasPanel, c);
-
     }
 
-    private void setXY(int pageSize){
-        System.out.println(pageSize);
-        canvasPanel.setPageSize(pageSize);
-        revalidate();
-    }
-
-    class MyMouseListener extends MouseAdapter {	//inner class inside GUI.DrawingPanel
+    class MyMouseListener extends MouseAdapter {	//inner class inside DrawingPanel
         private Point origin;
         public void mouseClicked(MouseEvent e) {
 
@@ -108,50 +103,66 @@ class DrawingPanel extends JPanel {
             }
         }
         public void mouseWheelMoved(MouseWheelEvent e) {
-            //zoom in and out
+            //zoom in and out, double or half
             int notches = e.getWheelRotation();
-            int oldP = canvasPanel.getPageSize();
-            int newP = oldP;
+            int oldxP = canvasPanel.getxPage();
+            int oldyP = canvasPanel.getyPage();
+            if ((notches > 0 && ((oldxP == 256) || (oldyP == 256))) ||
+                    (notches < 0 && ((oldxP == 8192)|| (oldyP == 8192)))){
+                return;
+            }
+            int newxP = oldxP;
+            int newyP = oldyP;
             if (notches > 0){
-                newP -= newP/10;
+                newxP = newxP/2;
+                newyP = newyP/2;
             }else{
-                newP += newP/10;
-            }
-            if (newP < 251){
-                newP = 250;
-            }
-            if (newP > 10000){
-                newP = 10000;
+                newxP = newxP*2;
+                newyP = newyP*2;
             }
             int w = 0;
             int h = 0;
-            int cx = 0;
-            int cy = 0;
+            int ocx = 0;
+            int ocy = 0;
+
             JViewport viewPort =
                     (JViewport) SwingUtilities.getAncestorOfClass(JViewport.class, DrawingPanel.this);
             if (viewPort != null) {
                 Rectangle view = viewPort.getViewRect();
                 w = view.width;
                 h = view.height;
-                cx = view.x + w/2;
-                cy = view.y + h/2;
+                ocx = view.x + w/2;
+                ocy = view.y + h/2;
             }
-            setXY(newP);
-            repaint();
-            double factor = ((double)newP)/oldP;
-            int freshX = (int)(cx * factor) - w/2;
-            int freshY = (int)(cy * factor) - h/2;
+            int oldwp = (DrawingPanel.this.getWidth() - oldxP)/2;
+            int oldhp = (DrawingPanel.this.getHeight()  - oldyP)/2;
+            ocx -= oldwp;
+            ocy -= oldhp;
+
+            int newwp = 100;
+            int newhp = 100;
+            if ((newxP + 200) < w){
+                newwp = (w - newxP)/2;
+            }
+            if ((newyP + 200) < h){
+                newhp = (h - newyP)/2;
+            }
+
+            int freshCX = newwp + (int)(ocx * ((double)newxP/oldxP)) - (w/2);
+            int freshCY = newhp + (int)(ocy * ((double)newyP/oldyP)) - (h/2);
+
+            canvasPanel.setXPage(newxP);
+            canvasPanel.setYPage(newyP);
+
+            Rectangle rec = new Rectangle(freshCX, freshCY, w, h);
 
             JScrollPane scroll =
                     (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, DrawingPanel.this);
             if (scroll != null){
-                //this gets scroll to update max on scrollbars for some reason
-                //even though revalidate does not
+
                 scroll.setViewportView(DrawingPanel.this);
             }
-            Rectangle rec = new Rectangle(freshX, freshY, w, h);
             DrawingPanel.this.scrollRectToVisible(rec);
-
         }
     } //end of MyMouseListener class
 }
