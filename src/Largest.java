@@ -145,7 +145,7 @@ class Largest extends JFrame{
     }
 
     private void resetMain(){
-        tabbed.setComponentAt(0, new MainPanel(Largest.this));
+        ((ShapeTab)tabbed.getComponentAt(0)).reset();
     }
 
     int getListening(){
@@ -194,7 +194,19 @@ class Largest extends JFrame{
         return tab.getShape();
     }
 
-    void addClick(int x, int y){
+    void shiftDrag(int ox, int oy, int x, int y){
+        ShapeTab tab = (ShapeTab) tabbed.getSelectedComponent();
+        tab.shiftDrag(ox, oy, x, y);
+        stampWorking();
+    }
+
+    void shiftClick(int x, int y){
+        ShapeTab tab = (ShapeTab) tabbed.getSelectedComponent();
+        tab.shiftClick(x, y);
+        stampWorking();
+    }
+
+    void click(int x, int y){
         ShapeTab tab = (ShapeTab) tabbed.getSelectedComponent();
         tab.click(x, y);
         stampWorking();

@@ -6,6 +6,7 @@ import java.util.LinkedList;
 
 public class MainPanel extends JPanel implements ShapeTab{
     private final Largest largest;
+    private GridBagConstraints c = new GridBagConstraints();
     private JLabel warning = new JLabel();
     private JButton[] shows = new JButton[3];
 
@@ -13,37 +14,39 @@ public class MainPanel extends JPanel implements ShapeTab{
         this.largest = largest;
         setLayout(new GridBagLayout());
         setBackground(Largest.BACKGROUND);
+        c.insets = new Insets(1, 1, 1, 1);
+        c.fill = GridBagConstraints.BOTH;
         addButtons();
     }
 
     private void addButtons(){
-        GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(1, 1, 1, 1);
-        c.fill = GridBagConstraints.BOTH;
         c.weightx = 0.4;
         c.weighty = 0.4;
-        addOffsets(c);
-        addDimensions(c);
-        addFlip(c);
-        addShear(c);
-        addRotate(c);
-        addHowAdd(c);
-        addReps(c);
-        addDistance(c);
-        addStartTheta(c);
-        addDeltaTheta(c);
-        addSpinRate(c);
-        addScale(c);
-        addFlipRep(c);
-        addStampFinal(c);
-        addNewStamp(c);
-        addAction(c);
-        addStamp(c);
-        addTemp(c);
-        addFinal(c);
-        addFile(c);
-        addSpacers(c);
-        addWarning(c);
+        c.gridwidth = 1;
+        c.gridheight = 1;
+        removeAll();
+        addOffsets();
+        addDimensions();
+        addFlip();
+        addShear();
+        addRotate();
+        addHowAdd();
+        addReps();
+        addDistance();
+        addStartTheta();
+        addDeltaTheta();
+        addSpinRate();
+        addScale();
+        addFlipRep();
+        addStampFinal();
+        addNewStamp();
+        addAction();
+        addStamp();
+        addTemp();
+        addFinal();
+        addFile();
+        addSpacers();
+        addWarning();
         setFocus();
     }
 
@@ -61,7 +64,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         repaint();
     }
 
-    private void addFile(GridBagConstraints c) {
+    private void addFile() {
         JButton save = createSave();
         JButton open = createOpen();
         c.gridx = 0;
@@ -93,7 +96,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         return save;
     }
 
-    private void addFinal(GridBagConstraints c) {
+    private void addFinal() {
         JButton sFinal = createSFinal();
         JButton cFinal = createCFinal();
         c.gridx = 0;
@@ -127,7 +130,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         return showFinal;
     }
 
-    private void addTemp(GridBagConstraints c) {
+    private void addTemp() {
         JButton sTemp = createSTemp();
         JButton cTemp = createCTemp();
         c.gridx = 0;
@@ -161,7 +164,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         return showTemp;
     }
 
-    private void addStamp(GridBagConstraints c) {
+    private void addStamp() {
         JButton sStamp = createSStamp();
         JButton cStamp = createCStamp();
         c.gridx = 0;
@@ -195,7 +198,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         return showStamp;
     }
 
-    private void addAction(GridBagConstraints c) {
+    private void addAction() {
         JButton sToT = createSToT();
         JButton tToF = createTToF();
         JButton fToT = createFToT();
@@ -242,7 +245,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         return st;
     }
 
-    private void addNewStamp(GridBagConstraints c){
+    private void addNewStamp(){
         JButton ns = new JButton("Stamp=Altered");
         ns.addActionListener(new ActionListener() {
             @Override
@@ -267,7 +270,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         this.add(ts, c);
     }
 
-    private void addStampFinal(GridBagConstraints c){
+    private void addStampFinal(){
         JButton sf = new JButton("Stamp Final");
         sf.addActionListener(new ActionListener() {
             @Override
@@ -281,7 +284,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         this.add(sf, c);
     }
 
-    private void addFlipRep(GridBagConstraints c) {
+    private void addFlipRep() {
         JCheckBox xcheck = new JCheckBox("Flip Horizontal");
         xcheck.setSelected(largest.getStamp().isXflipRepetition());
         xcheck.setBackground(Largest.BACKGROUND);
@@ -313,7 +316,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         this.add(ycheck, c);
     }
 
-    private void addScale(GridBagConstraints c){
+    private void addScale(){
         JTextField scaleField = new JTextField(String.valueOf(largest.getStamp().getScale()));
         JButton scale = new JButton("Scale");
         scale.addActionListener(new ActionListener() {
@@ -341,7 +344,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         this.add(scaleField, c);
     }
 
-    private void addSpinRate(GridBagConstraints c){
+    private void addSpinRate(){
         JTextField spinField = new JTextField(String.valueOf(largest.getStamp().getSpinRate()));
         JButton spin = new JButton("Change Spin");
         spin.addActionListener(new ActionListener() {
@@ -365,7 +368,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         this.add(spinField, c);
     }
 
-    private void addDeltaTheta(GridBagConstraints c){
+    private void addDeltaTheta(){
         JTextField deltaField = new JTextField(String.valueOf(largest.getStamp().getDeltaDirection()));
         JButton delta = new JButton("Change Angle");
         delta.addActionListener(new ActionListener() {
@@ -389,7 +392,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         this.add(deltaField, c);
     }
 
-    private void addDistance(GridBagConstraints c){
+    private void addDistance(){
         JTextField distanceField = new JTextField(String.valueOf(largest.getStamp().getDistance()));
         JButton distance = new JButton("Distance");
         distance.addActionListener(new ActionListener() {
@@ -413,7 +416,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         this.add(distanceField, c);
     }
 
-    private void addStartTheta(GridBagConstraints c){
+    private void addStartTheta(){
         JTextField startField = new JTextField(String.valueOf(largest.getStamp().getStartingDirection()));
         JButton start = new JButton("Initial Angle");
         start.addActionListener(new ActionListener() {
@@ -437,7 +440,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         this.add(startField, c);
     }
 
-    private void addReps(GridBagConstraints c){
+    private void addReps(){
         JTextField repField = new JTextField(String.valueOf(largest.getStamp().getReps()));
         JButton how = new JButton("Repetitions");
         how.addActionListener(new ActionListener() {
@@ -461,7 +464,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         this.add(repField, c);
     }
 
-    private void addFlip(GridBagConstraints c) {
+    private void addFlip() {
         JCheckBox xcheck = new JCheckBox("Flip Horizontal");
         xcheck.setSelected(largest.getStamp().isXflip());
         xcheck.setBackground(Largest.BACKGROUND);
@@ -493,7 +496,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         this.add(ycheck, c);
     }
 
-    private void addHowAdd(GridBagConstraints c) {
+    private void addHowAdd() {
         JTextField howField = new JTextField(String.valueOf(largest.getStamp().getHowAdd()));
         JButton how = new JButton("How to Stamp");
         how.addActionListener(new ActionListener() {
@@ -517,7 +520,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         this.add(howField, c);
     }
 
-    private void addRotate(GridBagConstraints c) {
+    private void addRotate() {
         JTextField thetaField = new JTextField(String.valueOf(largest.getStamp().getRotationDegree()));
         JButton theta = new JButton("Rotate");
         theta.addActionListener(new ActionListener() {
@@ -541,7 +544,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         this.add(thetaField, c);
     }
 
-    private void addShear(GridBagConstraints c) {
+    private void addShear() {
         JTextField xsField = new JTextField(String.valueOf(largest.getStamp().getXshear()));
         JButton xs = createxShear(xsField);
         JTextField ysField = new JTextField(String.valueOf(largest.getStamp().getYshear()));
@@ -595,7 +598,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         return xs;
     }
 
-    private void addDimensions(GridBagConstraints c) {
+    private void addDimensions() {
         JTextField widthField = new JTextField(String.valueOf(largest.getStamp().getWidth()));
         JButton width = createWidthB(widthField);
         JTextField heightField = new JTextField(String.valueOf(largest.getStamp().getHeight()));
@@ -648,7 +651,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         });
         return width;    }
 
-    private void addWarning(GridBagConstraints c){
+    private void addWarning(){
         c.gridx = 0;
         c.gridy = 0;
         warning.setBackground(Largest.BACKGROUND);
@@ -658,7 +661,7 @@ public class MainPanel extends JPanel implements ShapeTab{
     }
 
 
-    private void addOffsets(GridBagConstraints c){
+    private void addOffsets(){
         JTextField xOffField = new JTextField(String.valueOf(largest.getStamp().getxOffset()));
         JButton xOffB = createxOffB(xOffField);
         JTextField yOffField = new JTextField(String.valueOf(largest.getStamp().getyOffset()));
@@ -714,7 +717,7 @@ public class MainPanel extends JPanel implements ShapeTab{
 
 
 
-    private void addSpacers(GridBagConstraints c) {
+    private void addSpacers() {
         JLabel x1 = new JLabel();
         x1.setBackground(Largest.BACKGROUND);
         c.gridx = 1;
@@ -768,7 +771,34 @@ public class MainPanel extends JPanel implements ShapeTab{
     }
 
     @Override
-    public void click(int x, int y) {
+    public void shiftDrag(int ox, int oy, int x, int y) {
+        Stamp stamp = largest.getStamp();
+        int delta = 3;
+        if (oy > stamp.getyOffset()){
+            if (x > ox){
+                stamp.setRotationDegree(stamp.getRotationDegree() - delta);
+            }else{
+                stamp.setRotationDegree(stamp.getRotationDegree() + delta);
+            }
+        }else{
+            if (x > ox){
+                stamp.setRotationDegree(stamp.getRotationDegree() + delta);
+            }else{
+                stamp.setRotationDegree(stamp.getRotationDegree() - delta);
+            }
+        }
+        reset();
+    }
 
+    @Override
+    public void click(int x, int y) {
+        largest.getStamp().setxOffset(x);
+        largest.getStamp().setyOffset(y);
+        reset();
+    }
+
+    @Override
+    public void reset(){
+        addButtons();
     }
 }

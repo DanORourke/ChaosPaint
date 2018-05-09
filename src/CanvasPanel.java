@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -205,12 +206,10 @@ public class CanvasPanel extends JPanel {
         public void mouseClicked(MouseEvent e) {
             int x = ((xRes*e.getX())/xPage);
             int y = ((yRes*e.getY())/yPage);
-            if (SwingUtilities.isLeftMouseButton(e)){
-                largest.addClick(x, y);
-            }else if (whichPoints == 2){
-                largest.getStamp().setxOffset(x);
-                largest.getStamp().setyOffset(y);
-                largest.stampWorking();
+            if (SwingUtilities.isLeftMouseButton(e) && e.isShiftDown()){
+                largest.shiftClick(x, y);
+            }else{
+                largest.click(x, y);
             }
             revalidate();
             repaint();
@@ -224,18 +223,26 @@ public class CanvasPanel extends JPanel {
         public void mouseDragged(MouseEvent e) {
             //move the view around
             if (SwingUtilities.isLeftMouseButton(e) && origin != null) {
-                JViewport viewPort =
-                        (JViewport) SwingUtilities.getAncestorOfClass(JViewport.class, CanvasPanel.this);
-                if (viewPort != null) {
-                    //100 is there to correct for the filler JLabels in the drawing panel
-                    int deltaX = origin.x - e.getX() - DrawingPanel.MARGIN;
-                    int deltaY = origin.y - e.getY() - DrawingPanel.MARGIN;
+                if (e.isShiftDown()){
+                    int x = ((xRes*e.getX())/xPage);
+                    int y = ((yRes*e.getY())/yPage);
+                    int ox = (int)((xRes*origin.getX())/xPage);
+                    int oy = (int)((yRes*origin.getY())/yPage);
+                    largest.shiftDrag(ox, oy, x, y);
+                }else{
+                    JViewport viewPort =
+                            (JViewport) SwingUtilities.getAncestorOfClass(JViewport.class, CanvasPanel.this);
+                    if (viewPort != null) {
+                        //100 is there to correct for the filler JLabels in the drawing panel
+                        int deltaX = origin.x - e.getX() - DrawingPanel.MARGIN;
+                        int deltaY = origin.y - e.getY() - DrawingPanel.MARGIN;
 
-                    Rectangle view = viewPort.getViewRect();
-                    view.x += deltaX;
-                    view.y += deltaY;
+                        Rectangle view = viewPort.getViewRect();
+                        view.x += deltaX;
+                        view.y += deltaY;
 
-                    CanvasPanel.this.scrollRectToVisible(view);
+                        CanvasPanel.this.scrollRectToVisible(view);
+                    }
                 }
             }
         }

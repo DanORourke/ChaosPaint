@@ -1,3 +1,4 @@
+import java.awt.*;
 import java.util.LinkedList;
 
 public interface ShapeTab {
@@ -12,5 +13,19 @@ public interface ShapeTab {
 
     }
 
-    public void click(int x, int y);
+    public default void reset(){
+
+    }
+
+    public default void shiftDrag(int ox, int oy, int x, int y){
+
+    }
+
+    public default void shiftClick(int x, int y){
+
+    }
+
+    public default void click(int x, int y){
+
+    }
 }

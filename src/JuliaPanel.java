@@ -21,7 +21,11 @@ public class JuliaPanel extends JPanel implements ShapeTab{
     private boolean rational = false;
     private boolean biomorph = false;
     private int iterations = 64;
-    GridBagConstraints c = new GridBagConstraints();
+    private double xSpan = 4.0;
+    private double ySpan = 4.0;
+    private double xCenter = 0.0;
+    private double yCenter = 0.0;
+    private GridBagConstraints c = new GridBagConstraints();
     private ArrayList<Color> inColorList = new ArrayList<>();
     private byte[][] inColorMap = new byte[iterations][4];
     private ArrayList<Color> outColorList = new ArrayList<>();
@@ -50,7 +54,7 @@ public class JuliaPanel extends JPanel implements ShapeTab{
     private void updateFields(){
         removeAll();
         addWarning();
-        addInstruct();
+        //addInstruct();
         addC1Z1();
         addC2Z2();
         addC3();
@@ -61,6 +65,12 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         addStampify();
         addRandom();
         redraw();
+    }
+
+
+    @Override
+    public void reset(){
+        updateFields();
     }
 
     private void addRandom(){
@@ -139,6 +149,15 @@ public class JuliaPanel extends JPanel implements ShapeTab{
     }
 
     private void addChecks(){
+        JLabel instruct = new JLabel(getInstructText());
+        instruct.setBackground(Largest.BACKGROUND);
+        instruct.setForeground(Color.white);
+        c.gridx = 0;
+        c.gridy = 1;
+        c.gridwidth = 3;
+        add(instruct, c);
+        c.gridwidth = 1;
+
         JCheckBox inverseCheck = new JCheckBox("1/F(z)");
         inverseCheck.setSelected(inverse);
         inverseCheck.setBackground(Largest.BACKGROUND);
@@ -148,11 +167,12 @@ public class JuliaPanel extends JPanel implements ShapeTab{
             @Override
             public void actionPerformed(ActionEvent e) {
                 inverse = inverseCheck.isSelected();
+                instruct.setText(getInstructText());
                 redraw();
             }
         });
 
-        JCheckBox rationalCheck = new JCheckBox("Rational");
+        JCheckBox rationalCheck = new JCheckBox("Z1/Z2");
         rationalCheck.setSelected(rational);
         rationalCheck.setBackground(Largest.BACKGROUND);
         rationalCheck.setForeground(Color.WHITE);
@@ -161,6 +181,7 @@ public class JuliaPanel extends JPanel implements ShapeTab{
             @Override
             public void actionPerformed(ActionEvent e) {
                 rational = rationalCheck.isSelected();
+                instruct.setText(getInstructText());
                 redraw();
             }
         });
@@ -171,6 +192,17 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         c.gridx = 2;
         c.gridy = 11;
         add(rationalCheck, c);
+    }
+
+    private String getInstructText(){
+        String s = "C1*Z1 + C2*Z2 + C3";
+        if (rational){
+            s = "((C1 + Z1)/(C2 + Z2))+ C3";
+        }
+        if (inverse){
+            s = "1/(" + s + ")";
+        }
+        return "F(z) = " + s;
     }
 
     private void addC1Z1(){
@@ -344,17 +376,16 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         c.gridx = 2;
         add(c3ImaginaryField, c);
     }
-
-    private void addInstruct(){
-        JLabel instruct = new JLabel("<html>F(z) = C1*F(z-1)^Z1Power + C2*F(z-1)^Z2Power + C3</html>");
-        instruct.setBackground(Largest.BACKGROUND);
-        instruct.setForeground(Color.white);
-        c.gridx = 0;
-        c.gridy = 1;
-        c.gridwidth = 3;
-        add(instruct, c);
-        c.gridwidth = 1;
-    }
+//    private void addInstruct(){
+//        JLabel instruct = new JLabel("<html>F(z) = C1*F(z-1)^Z1Power + C2*F(z-1)^Z2Power + C3</html>");
+//        instruct.setBackground(Largest.BACKGROUND);
+//        instruct.setForeground(Color.white);
+//        c.gridx = 0;
+//        c.gridy = 1;
+//        c.gridwidth = 3;
+//        add(instruct, c);
+//        c.gridwidth = 1;
+//    }
 
     private void addInColor(Color c){
         inColorList.add(c);
@@ -524,17 +555,18 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         LinkedList<double[]> outsideNormal = new LinkedList<>();
         double insideMax = 0.0;
         double[] outMax = new double[iterations+2];
-        byte[][][] points = largest.getPointsStamp();
-        int xRes = points.length;
-        int yRes = points[0].length;
-        double xFactor = 4.0/xRes;
-        double yFactor = 4.0/yRes;
-        int xCenter = xRes/2;
-        int yCenter = yRes/2;
+        //byte[][][] points = largest.getPointsStamp();
+        int xRes = largest.getPointsStamp().length;
+        int yRes = largest.getPointsStamp()[0].length;
+        byte[][][] points = new byte[xRes][yRes][4];
+        double xFactor = xSpan/xRes;
+        double yFactor = ySpan/yRes;
+        int xResCenter = xRes/2;
+        int yResCenter = yRes/2;
         for (int x = 0; x < xRes; x++){
             for(int y = 0 ; y < yRes; y++){
-                double areal = (x - xCenter) * xFactor;
-                double aim = (y - yCenter) * yFactor;
+                double areal = ((x - xResCenter ) * xFactor) - xCenter;
+                double aim = ((y - yResCenter) * yFactor) - yCenter;
                 double[] it = iterate(areal, aim);
                 if ((int)it[0] == iterations){
                     insideNormal.addLast(new double[]{it[1], x, y});
@@ -548,7 +580,7 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         }
         addInside(insideMax, insideNormal, points);
         addOutside(outMax, outsideNormal, points);
-        myStamp = new Stamp(xCenter, yCenter, points);
+        myStamp = new Stamp(xResCenter, yResCenter, points);
         largest.revalidate();
         largest.repaint();
     }
@@ -631,58 +663,6 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         return ans;
     }
 
-    private byte[] getUseColor(double[] both){
-        int it = (int)both[0];
-        double distance = both[1];
-        if (it > iterations){
-            //undefined
-            byte red = inColorMap[iterations-1][0];
-            byte green = inColorMap[iterations-1][1];
-            byte blue = inColorMap[iterations-1][2];
-            byte alpha = inColorMap[iterations-1][3];
-            return new byte[]{red, green, blue, alpha};
-        }
-        if (it == iterations){
-            //inside, never used
-            int index = (int)((distance/16.0)*iterations);
-            byte red = inColorMap[index][0];
-            byte green = inColorMap[index][1];
-            byte blue = inColorMap[index][2];
-            byte alpha = inColorMap[index][3];
-            return new byte[]{red, green, blue, alpha};
-        }
-        if (it < 0){
-            //inside it count, never used
-            it = it * -1;
-            byte red = inColorMap[iterations - it][0];
-            byte green = inColorMap[iterations - it][1];
-            byte blue = inColorMap[iterations - it][2];
-            byte alpha = inColorMap[iterations - it][3];
-            return new byte[]{red, green, blue, alpha};
-        }
-        //outside
-        //use in reverse order so first one put in list is closest to julia
-        byte red = outColorMap[iterations - it - 1][0];
-        byte green = outColorMap[iterations - it - 1][1];
-        byte blue = outColorMap[iterations - it - 1][2];
-        byte alpha = outColorMap[iterations - it - 1][3];
-
-        return new byte[]{red,green,blue,alpha};
-
-
-//        int red1 = outColorMap[iterations - it][0] & 0xFF;
-//        int green1 = outColorMap[iterations - it][1] & 0xFF;
-//        int blue1 = outColorMap[iterations - it][2] & 0xFF;
-//        int alpha1 = outColorMap[iterations - it][3] & 0xFF;
-//
-//        byte red = (byte)(((red1 * size) + (red0 * (12.0 - size)))/12.0);
-//        byte green = (byte)(((green1 * size) + (green0 * (12.0 - size)))/12.0);
-//        byte blue = (byte)(((blue1 * size) + (blue0 * (12.0 - size)))/12.0);
-//        byte alpha = (byte)(((alpha1 * size) + (alpha0 * (12.0 - size)))/12.0);
-//
-//        return new byte[]{red, green, blue, alpha};
-    }
-
     private double[] iterate(double areal, double aim){
         int it = 0;
         int limit = 4;
@@ -735,43 +715,6 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         } else{
             return new double[]{(double)it, lex.distance()};
         }
-    }
-
-    private double[] iteratePow(double areal, double aim){
-        int it = 0;
-        int limit = 4;
-        double last = 1000.0;
-        double dif = 0.00005;
-        while(it < iterations && (areal * areal) + (aim * aim) < limit){
-            it++;
-//            double[] complex = complexPow(areal, aim, power);
-//            areal = complex[0] + real;
-//            aim = complex[1] + imaginary;
-            //not working right, why not??
-//            double distance = (areal * areal) + (aim * aim);
-//            if(Math.abs(distance - last)< dif){
-//                it = it * -1;
-//                break;
-//            }
-//            last = distance;
-        }
-        return new double[]{(double)it, (areal * areal) + (aim * aim)};
-    }
-
-    private double[] complexPow(double areal, double aim, int pow){
-        double[] complex = new double[2];
-        double rworking = areal;
-        double imworking = aim;
-        int i = 1;
-        while(i < pow){
-            double rtemp = (rworking * areal) - (imworking * aim);
-            imworking = (imworking*areal) + (rworking*aim);
-            rworking = rtemp;
-            i++;
-        }
-        complex[0] = rworking;
-        complex[1] = imworking;
-        return complex;
     }
 
     private void initInColorMap(){
@@ -898,8 +841,25 @@ public class JuliaPanel extends JPanel implements ShapeTab{
     }
 
     @Override
-    public void click(int x, int y) {
+    public void shiftClick(int x, int y) {
+        xSpan = xSpan*2;
+        ySpan = ySpan*2;
+        redraw();
+    }
 
+    @Override
+    public void click(int x, int y) {
+        int xRes = largest.getPointsStamp().length;
+        int yRes = largest.getPointsStamp()[0].length;
+        double xFactor = xSpan/xRes;
+        double yFactor = ySpan/yRes;
+        int xResCenter = xRes/2;
+        int yResCenter = yRes/2;
+        xCenter -= ((x - xResCenter) * xFactor);
+        yCenter -= ((y - yResCenter) * yFactor);
+        xSpan = xSpan/2;
+        ySpan = ySpan/2;
+        redraw();
     }
     class ImagePanel extends JPanel{
         private Image image;
