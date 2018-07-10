@@ -1,31 +1,34 @@
-import java.awt.*;
+
+import java.awt.image.BufferedImage;
 import java.util.LinkedList;
 
 public interface ShapeTab {
 
-    public LinkedList<Vertex> getShape();
-
-    public default Stamp getStamp() {
-        return new Stamp();
+    default LinkedList<Vertex> getShape(){
+        return new LinkedList<>();
     }
 
-    public default void redraw(){
+    int[] getRes();
 
-    }
+    BufferedImage getActiveImage();
 
-    public default void reset(){
-
-    }
-
-    public default void shiftDrag(int ox, int oy, int x, int y){
+    default void redraw(){
 
     }
 
-    public default void shiftClick(int x, int y){
+    default void reset(){
 
     }
 
-    public default void click(int x, int y){
+    default void shiftDrag(int ox, int oy, int x, int y){
+
+    }
+
+    default void shiftClick(int x, int y){
+
+    }
+
+    default void click(int x, int y){
 
     }
 }

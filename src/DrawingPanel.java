@@ -107,8 +107,8 @@ class DrawingPanel extends JPanel {
             int notches = e.getWheelRotation();
             int oldxP = canvasPanel.getxPage();
             int oldyP = canvasPanel.getyPage();
-            if ((notches > 0 && ((oldxP == 256) || (oldyP == 256))) ||
-                    (notches < 0 && ((oldxP == 8192)|| (oldyP == 8192)))){
+            if ((notches > 0 && ((oldxP <= 128) || (oldyP <= 128))) ||
+                    (notches < 0 && ((oldxP >= 16384)|| (oldyP >= 16384)))){
                 return;
             }
             int newxP = oldxP;

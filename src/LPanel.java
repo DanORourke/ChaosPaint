@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.LinkedList;
 
 public class LPanel extends JPanel implements ShapeTab{
@@ -19,5 +20,15 @@ public class LPanel extends JPanel implements ShapeTab{
     @Override
     public void click(int x, int y) {
 
+    }
+
+    @Override
+    public int[] getRes(){
+        return new int[]{1, 1};
+    }
+
+    @Override
+    public BufferedImage getActiveImage(){
+        return new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
     }
 }

@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -27,13 +28,16 @@ public class JuliaPanel extends JPanel implements ShapeTab{
     private double yCenter = 0.0;
     private GridBagConstraints c = new GridBagConstraints();
     private ArrayList<Color> inColorList = new ArrayList<>();
-    private byte[][] inColorMap = new byte[iterations][4];
+    private int[] inColorMap = new int[iterations];
     private ArrayList<Color> outColorList = new ArrayList<>();
-    private byte[][] outColorMap = new byte[iterations][4];
+    private int[] outColorMap = new int[iterations];
     private JLabel warning = new JLabel();
     private ImagePanel inPanel = new ImagePanel();
     private ImagePanel outPanel = new ImagePanel();
-    private Stamp myStamp = new Stamp();
+    //private Stamp myStamp = new Stamp();
+    private int xRes;
+    private int yRes;
+    private BufferedImage image;
     private LinkedList<Vertex> shape = new LinkedList<>();
 
     JuliaPanel(Largest largest){
@@ -41,17 +45,34 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         this.largest = largest;
         setLayout(new GridBagLayout());
         setBackground(Largest.BACKGROUND);
+        initImage();
         c.fill = GridBagConstraints.BOTH;
         c.weightx = 0.4;
         c.weighty = 0.1;
         c.insets = new Insets(1, 1, 1, 1);
-        addInColor(Color.black);
-        addOutColor(Color.yellow);
-        addOutColor(Color.BLUE);
+        inColorList.add(Color.black);
+        initInColorMap();
+        inPanel.setImage(getInImage());
+        outColorList.add(Color.yellow);
+        outColorList.add(Color.BLUE);
+        initOutColorMap();
+        outPanel.setImage(getOutImage());
         updateFields();
+        redraw();
+    }
+
+    private void initImage(){
+        int[] mainRes = largest.getMainRes();
+        xRes = mainRes[0];
+        yRes = mainRes[1];
+        image = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
     }
 
     private void updateFields(){
+        c.weightx = 0.4;
+        c.weighty = 0.4;
+        c.gridwidth = 1;
+        c.gridheight = 1;
         removeAll();
         addWarning();
         //addInstruct();
@@ -60,11 +81,12 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         addC3();
         addChecks();
         addIterations();
+        addResolution();
         setInColor();
         setOutColor();
         addStampify();
         addRandom();
-        redraw();
+        addSpacers();
     }
 
 
@@ -73,13 +95,43 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         updateFields();
     }
 
+    private void addSpacers() {
+        JLabel x1 = new JLabel();
+        x1.setBackground(Largest.BACKGROUND);
+        c.gridx = 1;
+        c.gridy = 1;
+        c.gridheight = 17;
+        c.weightx = 0.2;
+        c.weighty = 1.0;
+        c.fill = GridBagConstraints.BOTH;
+        this.add(x1, c);
+
+//        JLabel y10 = new JLabel();
+//        y10.setBackground(Largest.BACKGROUND);
+//        c.gridx = 0;
+//        c.gridy = 10;
+//        c.gridwidth = 3;
+//        c.gridheight = 1;
+//
+//        this.add(y10, c);
+//
+//        JLabel y18 = new JLabel();
+//        y18.setBackground(Largest.BACKGROUND);
+//        c.gridy = 18;
+//        this.add(y18, c);
+
+//        JLabel y27 = new JLabel();
+//        y27.setBackground(Largest.BACKGROUND);
+//        c.gridy = 27;
+//        this.add(y27, c);
+    }
+
     private void addRandom(){
         JButton rBtn = new JButton("Random");
         rBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 randomize();
-                updateFields();
             }
         });
         c.gridx = 2;
@@ -91,6 +143,10 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         Random r = new Random();
         double d = 6.0;
         int i = 7;
+        xSpan = 4.0;
+        ySpan = 4.0;
+        xCenter = 0.0;
+        yCenter = 0.0;
         c1Real = r.nextDouble()* d - d/2;
         c1Imaginary = r.nextDouble()* d - d/2;
         z1Power = r.nextInt(i) - i/2;
@@ -110,9 +166,7 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         stampify.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                largest.setStamp(myStamp);
-                largest.stampWorking();
-                largest.workingToStamp();
+                largest.stampify(image);
             }
         });
         c.gridx = 0;
@@ -146,6 +200,37 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         add(itBtn, c);
         c.gridx = 2;
         add(itField, c);
+    }
+
+    private void addResolution(){
+        JTextField resField = new JTextField(String.valueOf(xRes));
+        JButton resBtn = new JButton("Resolution");
+        resBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int its = Integer.parseInt(resField.getText());
+                    if (its < 1){
+                        setWarningText("Enter an int greater than 0");
+                    }else{
+                        xRes = its;
+                        yRes = its;
+                        image = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
+                        largest.changeRes(getRes());
+                        redraw();
+                    }
+                }catch (NumberFormatException e1){
+                    setWarningText("Enter an int greater than 0");
+                }
+                resField.setText(String.valueOf(xRes));
+            }
+        });
+
+        c.gridx = 0;
+        c.gridy = 17;
+        add(resBtn, c);
+        c.gridx = 2;
+        add(resField, c);
     }
 
     private void addChecks(){
@@ -392,8 +477,6 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         initInColorMap();
         inPanel.setImage(getInImage());
         redraw();
-        revalidate();
-        repaint();
     }
 
     private void removeInColor(){
@@ -401,8 +484,6 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         initInColorMap();
         inPanel.setImage(getInImage());
         redraw();
-        revalidate();
-        repaint();
     }
 
     private void addOutColor(Color c){
@@ -410,8 +491,6 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         initOutColorMap();
         outPanel.setImage(getOutImage());
         redraw();
-        revalidate();
-        repaint();
     }
 
     private void removeOutColor(){
@@ -419,8 +498,6 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         initOutColorMap();
         outPanel.setImage(getOutImage());
         redraw();
-        revalidate();
-        repaint();
     }
 
     private void addWarning(){
@@ -487,28 +564,26 @@ public class JuliaPanel extends JPanel implements ShapeTab{
 
     private Image getOutImage(){
         int height = 25;
-        BufferedImage image = new BufferedImage(iterations, height, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage outImage = new BufferedImage(iterations, height, BufferedImage.TYPE_INT_ARGB);
         for (int x = 0; x < iterations; x++){
-            Color c = new Color(outColorMap[x][0] & 0xFF, outColorMap[x][1] & 0xFF,
-                    outColorMap[x][2] & 0xFF, outColorMap[x][3] & 0xFF);
+            int c = outColorMap[x];
             for(int y = 0; y < height; y++){
-                image.setRGB(x, y, c.getRGB());
+                outImage.setRGB(x, y, c);
             }
         }
-        return image;
+        return outImage;
     }
 
     private Image getInImage(){
         int height = 25;
-        BufferedImage image = new BufferedImage(iterations, height, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage inImage = new BufferedImage(iterations, height, BufferedImage.TYPE_INT_ARGB);
         for (int x = 0; x < iterations; x++){
-            Color c = new Color(inColorMap[x][0] & 0xFF, inColorMap[x][1] & 0xFF,
-                    inColorMap[x][2] & 0xFF, inColorMap[x][3] & 0xFF);
+            int c = inColorMap[x];
             for(int y = 0; y < height; y++){
-                image.setRGB(x, y, c.getRGB());
+                inImage.setRGB(x, y, c);
             }
         }
-        return image;
+        return inImage;
     }
 
     private void setInColor(){
@@ -551,14 +626,18 @@ public class JuliaPanel extends JPanel implements ShapeTab{
     public void redraw(){
         initOutColorMap();
         initInColorMap();
-        LinkedList<double[]> insideNormal = new LinkedList<>();
-        LinkedList<double[]> outsideNormal = new LinkedList<>();
+
         double insideMax = 0.0;
+        double insideMin = Double.MAX_VALUE;
         double[] outMax = new double[iterations+2];
-        //byte[][][] points = largest.getPointsStamp();
-        int xRes = largest.getPointsStamp().length;
-        int yRes = largest.getPointsStamp()[0].length;
-        byte[][][] points = new byte[xRes][yRes][4];
+        double[] outMin = new double[iterations+2];
+        Arrays.fill(outMin, Double.MAX_VALUE);
+//        int[] dim = largest.getMainRes();
+//        int xRes = dim[0];
+//        int yRes = dim[1];
+        double[][][] hold = new double[xRes][yRes][2];
+        //byte[][][] points = new byte[xRes][yRes][4];
+        image = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
         double xFactor = xSpan/xRes;
         double yFactor = ySpan/yRes;
         int xResCenter = xRes/2;
@@ -568,99 +647,90 @@ public class JuliaPanel extends JPanel implements ShapeTab{
                 double areal = ((x - xResCenter ) * xFactor) - xCenter;
                 double aim = ((y - yResCenter) * yFactor) - yCenter;
                 double[] it = iterate(areal, aim);
+                hold[x][y][0] = it[0];
+                hold[x][y][1] = it[1];
                 if ((int)it[0] == iterations){
-                    insideNormal.addLast(new double[]{it[1], x, y});
                     insideMax = Math.max(insideMax, it[1]);
+                    insideMin = Math.min(insideMin, it[1]);
                 }else{
-                    outsideNormal.addLast(new double[]{it[0], it[1], x, y});
                     outMax[(int)it[0]] = Math.max(outMax[(int)it[0]], it[1]);
-                    //points[x][y] = getUseColor(it);
+                    outMin[(int)it[0]] = Math.min(outMin[(int)it[0]], it[1]);
                 }
             }
         }
-        addInside(insideMax, insideNormal, points);
-        addOutside(outMax, outsideNormal, points);
-        myStamp = new Stamp(xResCenter, yResCenter, points);
-        largest.revalidate();
-        largest.repaint();
+        //could init color maps now that i know the range, remove colors never accessed
+        addHold(hold, insideMax, insideMin, outMax, outMin);
+        //System.out.println(insideMax);
+        largest.reset();
     }
 
-    private void addOutside(double[] outMax, LinkedList<double[]> outsideNormal, byte[][][] points){
-        for (double[] point : outsideNormal){
-            int x = (int)point[2];
-            int y = (int)point[3];
-            if (point[0] >= iterations - 1){
-                points[x][y][0] =  inColorMap[iterations-1][0];
-                points[x][y][1] =  inColorMap[iterations-1][1];
-                points[x][y][2] =  inColorMap[iterations-1][2];
-                points[x][y][3] =  inColorMap[iterations-1][3];
-            }else{
-                if (outMax[(int)point[0]] == 0){
-                    System.out.println("problem " + x + " " + y);
-                    continue;
+    private void addHold(double[][][] hold, double insideMax, double insideMin, double[] outMax, double[] outMin){
+        double gap = insideMax - insideMin;
+        double step = (gap/iterations);
+        for (int x = 0; x < hold.length; x++){
+            for (int y = 0; y < hold[0].length; y++){
+                double[] point = hold[x][y];
+                if ((int)point[0] == iterations){
+                    double p = point[1];
+                    if (insideMax == 0.0 || p == insideMax) {
+                        image.setRGB(x, y, inColorMap[iterations-1]);
+//                        points[x][y][0] = inColorMap[iterations - 1][0];
+//                        points[x][y][1] = inColorMap[iterations - 1][1];
+//                        points[x][y][2] = inColorMap[iterations - 1][2];
+//                        points[x][y][3] = inColorMap[iterations - 1][3];
+                    }else{
+                        p -= insideMin;
+                        int indexLow = (int)((p*iterations)/gap);
+                        double local = ((p - indexLow) / step);
+                        int color = interpolate(inColorMap, indexLow, local);
+                        image.setRGB(x, y, color);
+                    }
+                }else if (point[0] >= iterations - 1){
+                    image.setRGB(x, y, inColorMap[iterations-1]);
+                }else{
+                    if (outMax[(int)point[0]] == 0){
+                        System.out.println("problem " + x + " " + y);
+                        continue;
+                    }
+                    int indexLow = iterations - (int)point[0] - 1;
+                    double local = (point[1] - outMin[indexLow])/(outMax[indexLow] - outMin[indexLow]);
+                    int color = interpolate(outColorMap, indexLow, local);
+                    image.setRGB(x, y, color);
                 }
-                //add in reverse, easier to make cool pictures
-                int indexLow = iterations - (int)point[0] - 1;
-                //double local = (outMax[(int)point[0]] - point[1])/outMax[(int)point[0]];
-                double local = point[1]/outMax[(int)point[0]];
-                byte[] color = interpolate(outColorMap, indexLow, local);
-                points[x][y] = color;
             }
         }
     }
 
-    private void addInside(double insideMax, LinkedList<double[]> insideNormal, byte[][][] points){
-        double step = (insideMax/iterations);
-        for (double[] point : insideNormal){
-            int x = (int)point[1];
-            int y = (int)point[2];
-            if (insideMax == 0.0 || point[0] == insideMax){
-                points[x][y][0] =  inColorMap[iterations-1][0];
-                points[x][y][1] =  inColorMap[iterations-1][1];
-                points[x][y][2] =  inColorMap[iterations-1][2];
-                points[x][y][3] =  inColorMap[iterations-1][3];
-                continue;
-            }
-            int indexLow = (int)((point[0]/insideMax) * (iterations));
-            double local = point[0] - indexLow * step;
-            byte[] color = interpolate(inColorMap, indexLow, local/step);
-            points[x][y] = color;
-        }
-    }
-
-    private byte[] interpolate(byte[][] colorMap, int indexLow, double local){
+    private int interpolate(int[] colorMap, int indexLow, double local){
         if (indexLow == colorMap.length - 1){
-            byte[] ans = new byte[4];
-            ans[0] = colorMap[indexLow][0];
-            ans[1] = colorMap[indexLow][1];
-            ans[2] = colorMap[indexLow][2];
-            ans[3] = colorMap[indexLow][3];
-            return ans;
+            return colorMap[indexLow];
         }
 
         int indexHigh = indexLow + 1;
-        int r0 = colorMap[indexLow][0]&0xFF;
-        int g0 = colorMap[indexLow][1]&0xFF;
-        int b0 = colorMap[indexLow][2]&0xFF;
-        int a0 = colorMap[indexLow][3]&0xFF;
+        int c0 = colorMap[indexLow];
+//        int r0 = colorMap[indexLow][0]&0xFF;
+//        int g0 = colorMap[indexLow][1]&0xFF;
+//        int b0 = colorMap[indexLow][2]&0xFF;
+//        int a0 = colorMap[indexLow][3]&0xFF;
 
-        int r1 = colorMap[indexHigh][0]&0xFF;
-        int g1 = colorMap[indexHigh][1]&0xFF;
-        int b1 = colorMap[indexHigh][2]&0xFF;
-        int a1 = colorMap[indexHigh][3]&0xFF;
+        int c1 = colorMap[indexHigh];
+//        int r1 = colorMap[indexHigh][0]&0xFF;
+//        int g1 = colorMap[indexHigh][1]&0xFF;
+//        int b1 = colorMap[indexHigh][2]&0xFF;
+//        int a1 = colorMap[indexHigh][3]&0xFF;
+//
+//        int dr = r1 - r0;
+//        int dg = g1 - g0;
+//        int db = b1 - b0;
+//        int da = a1 - a0;
+//
+//        byte[] ans = new byte[4];
+//        ans[0] = (byte) (r0 + local * dr);
+//        ans[1] = (byte) (g0 + local * dg);
+//        ans[2] = (byte) (b0 + local * db);
+//        ans[3] = (byte) (a0 + local * da);
 
-        int dr = r1 - r0;
-        int dg = g1 - g0;
-        int db = b1 - b0;
-        int da = a1 - a0;
-
-        byte[] ans = new byte[4];
-        ans[0] = (byte) (r0 + local * dr);
-        ans[1] = (byte) (g0 + local * dg);
-        ans[2] = (byte) (b0 + local * db);
-        ans[3] = (byte) (a0 + local * da);
-
-        return ans;
+        return Stamp.blend(c0, c1, 1.0 - local);
     }
 
     private double[] iterate(double areal, double aim){
@@ -708,7 +778,7 @@ public class JuliaPanel extends JPanel implements ShapeTab{
             it++;
         }
         if (it == iterations){
-            //add distace traveled
+            //add distance traveled
             double travelD = (((areal - lex.getReal())*(areal - lex.getReal())) +
                     ((aim - lex.getImaginary()) * (aim - lex.getImaginary())));
             return new double[]{(double)it, travelD};
@@ -718,14 +788,11 @@ public class JuliaPanel extends JPanel implements ShapeTab{
     }
 
     private void initInColorMap(){
-        inColorMap = new byte[iterations][4];
+        inColorMap = new int[iterations];
         if (inColorList.size() == 0)
         {
             for (int i = 0 ; i < iterations; i++){
-                inColorMap[i][0] = (byte)0;
-                inColorMap[i][1] = (byte)0;
-                inColorMap[i][2] = (byte)0;
-                inColorMap[i][3] = (byte)0;
+                inColorMap[i] = 0;
             }
             return;
         }
@@ -733,10 +800,7 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         {
             Color c = inColorList.get(0);
             for (int i = 0 ; i < iterations; i++){
-                inColorMap[i][0] = (byte)c.getRed();
-                inColorMap[i][1] = (byte)c.getGreen();
-                inColorMap[i][2] = (byte)c.getBlue();
-                inColorMap[i][3] = (byte)c.getAlpha();
+                inColorMap[i] = c.getRGB();
             }
             return;
         }
@@ -745,99 +809,102 @@ public class JuliaPanel extends JPanel implements ShapeTab{
             double globalRel = (double) i / (iterations - 1);
             int index0 = (int) (globalRel / colorDelta);
             int index1 = Math.min(inColorList.size() - 1, index0 + 1);
-            double localRel = (globalRel - index0 * colorDelta) / colorDelta;
+            double localRel = (globalRel - (index0 * colorDelta)) / colorDelta;
 
-            Color c0 = inColorList.get(index0);
-            int r0 = c0.getRed();
-            int g0 = c0.getGreen();
-            int b0 = c0.getBlue();
-            int a0 = c0.getAlpha();
+            int c0 = inColorList.get(index0).getRGB();
+//            int r0 = c0.getRed();
+//            int g0 = c0.getGreen();
+//            int b0 = c0.getBlue();
+//            int a0 = c0.getAlpha();
 
-            Color c1 = inColorList.get(index1);
-            int r1 = c1.getRed();
-            int g1 = c1.getGreen();
-            int b1 = c1.getBlue();
-            int a1 = c1.getAlpha();
+            int c1 = inColorList.get(index1).getRGB();
+//            int r1 = c1.getRed();
+//            int g1 = c1.getGreen();
+//            int b1 = c1.getBlue();
+//            int a1 = c1.getAlpha();
+//
+//            r0 += (localRel * (r1-r0));
+//            g0 += (localRel * (g1-g0));
+//            b0 += (localRel * (b1-b0));
+//            a0 += (localRel * (a1-a0));
+//
+//            inColorMap[i] =  a0 << 24 | r0 << 16 | g0 << 8 | b0;
+            inColorMap[i] = Stamp.blend(c0, c1, 1.0 - localRel);
 
-            int dr = r1 - r0;
-            int dg = g1 - g0;
-            int db = b1 - b0;
-            int da = a1 - a0;
-
-            inColorMap[i][0] = (byte) (r0 + localRel * dr);
-            inColorMap[i][1] = (byte) (g0 + localRel * dg);
-            inColorMap[i][2] = (byte) (b0 + localRel * db);
-            inColorMap[i][3] = (byte) (a0 + localRel * da);
         }
     }
 
     private void initOutColorMap() {
-        outColorMap = new byte[iterations][4];
+        outColorMap = new int[iterations];
         if (outColorList.size() == 0)
         {
             for (int i = 0 ; i < iterations; i++){
-                outColorMap[i][0] = (byte)0;
-                outColorMap[i][1] = (byte)0;
-                outColorMap[i][2] = (byte)0;
-                outColorMap[i][3] = (byte)0;
+                outColorMap[i] = 0;
             }
             return;
         }
 
         if (outColorList.size() == 1)
         {
-            Color c = outColorList.get(0);
+            int c = outColorList.get(0).getRGB();
             for (int i = 0 ; i < iterations; i++){
-                outColorMap[i][0] = (byte)c.getRed();
-                outColorMap[i][1] = (byte)c.getGreen();
-                outColorMap[i][2] = (byte)c.getBlue();
-                outColorMap[i][3] = (byte)c.getAlpha();
+                outColorMap[i] = c;
             }
             return;
         }
-        double colorDelta = 1.0 / (outColorList.size() - 1);
-        for (int i=0; i<iterations; i++)
+        double colorDelta = 1.0 / (outColorList.size()-1);
+        for (int i=0; i < iterations; i++)
         {
-            double globalRel = (double)i / (iterations - 1);
+            double globalRel = (double)i / (iterations-1);
             int index0 = (int)(globalRel / colorDelta);
             int index1 = Math.min(outColorList.size()-1, index0 + 1);
 //            int index1 = Math.min((int)(globalRel / colorDelta) + 1, colorList.size()-1);
 //            int index0 = Math.max(0, index1 - 1);
-            double localRel = (globalRel - index0 * colorDelta) / colorDelta;
-//            double localRel = colorDelta / (globalRel - index0 * colorDelta);
+            //double localRel = (globalRel - index0 * colorDelta) / colorDelta;
+            double localRel = (globalRel - (index0*colorDelta)) / colorDelta;
+//            double dis1 = (index1 - globalRel) / colorDelta;
+//            double localRel;
+//            if (dis1 == 0.0){
+//                localRel = 1.0;
+//            }else{
+//                localRel = dis0/dis1;
+//            }
 
-            Color c0 = outColorList.get(index0);
-            int r0 = c0.getRed();
-            int g0 = c0.getGreen();
-            int b0 = c0.getBlue();
-            int a0 = c0.getAlpha();
+            int c0 = outColorList.get(index0).getRGB();
+//            int r0 = c0.getRed();
+//            int g0 = c0.getGreen();
+//            int b0 = c0.getBlue();
+//            int a0 = c0.getAlpha();
 
-            Color c1 = outColorList.get(index1);
-            int r1 = c1.getRed();
-            int g1 = c1.getGreen();
-            int b1 = c1.getBlue();
-            int a1 = c1.getAlpha();
+            int c1 = outColorList.get(index1).getRGB();
+//            int r1 = c1.getRed();
+//            int g1 = c1.getGreen();
+//            int b1 = c1.getBlue();
+//            int a1 = c1.getAlpha();
+//
+//            r0 += (localRel * (r1-r0));
+//            g0 += (localRel * (g1-g0));
+//            b0 += (localRel * (b1-b0));
+//            a0 += (localRel * (a1-a0));
+//
+//            outColorMap[i] =  a0 << 24 | r0 << 16 | g0 << 8 | b0;
 
-            int dr = r1-r0;
-            int dg = g1-g0;
-            int db = b1-b0;
-            int da = a1-a0;
-
-            outColorMap[i][0] = (byte)(r0 + localRel * dr);
-            outColorMap[i][1] = (byte)(g0 + localRel * dg);
-            outColorMap[i][2] = (byte)(b0 + localRel * db);
-            outColorMap[i][3] = (byte)(a0 + localRel * da);
+//            int dr = r1-r0;
+//            int dg = g1-g0;
+//            int db = b1-b0;
+//            int da = a1-a0;
+//
+//            outColorMap[i][0] = (byte)(r0 + localRel * dr);
+//            outColorMap[i][1] = (byte)(g0 + localRel * dg);
+//            outColorMap[i][2] = (byte)(b0 + localRel * db);
+//            outColorMap[i][3] = (byte)(a0 + localRel * da);
+            outColorMap[i] = Stamp.blend(c0, c1, 1.0 - localRel);
         }
     }
 
     @Override
     public LinkedList<Vertex> getShape() {
         return null;
-    }
-
-    @Override
-    public Stamp getStamp() {
-        return myStamp;
     }
 
     @Override
@@ -849,8 +916,9 @@ public class JuliaPanel extends JPanel implements ShapeTab{
 
     @Override
     public void click(int x, int y) {
-        int xRes = largest.getPointsStamp().length;
-        int yRes = largest.getPointsStamp()[0].length;
+//        int[] dim = largest.getMainRes();
+//        int xRes = dim[0];
+//        int yRes = dim[1];
         double xFactor = xSpan/xRes;
         double yFactor = ySpan/yRes;
         int xResCenter = xRes/2;
@@ -861,6 +929,19 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         ySpan = ySpan/2;
         redraw();
     }
+
+
+    @Override
+    public int[] getRes(){
+        return new int[]{xRes, yRes};
+    }
+
+    @Override
+    public BufferedImage getActiveImage(){
+        return image;
+    }
+
+
     class ImagePanel extends JPanel{
         private Image image;
 
