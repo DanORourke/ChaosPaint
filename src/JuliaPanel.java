@@ -34,11 +34,9 @@ public class JuliaPanel extends JPanel implements ShapeTab{
     private JLabel warning = new JLabel();
     private ImagePanel inPanel = new ImagePanel();
     private ImagePanel outPanel = new ImagePanel();
-    //private Stamp myStamp = new Stamp();
     private int xRes;
     private int yRes;
     private BufferedImage image;
-    private LinkedList<Vertex> shape = new LinkedList<>();
 
     JuliaPanel(Largest largest){
         super();
@@ -48,7 +46,7 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         initImage();
         c.fill = GridBagConstraints.BOTH;
         c.weightx = 0.4;
-        c.weighty = 0.1;
+        c.weighty = 0.4;
         c.insets = new Insets(1, 1, 1, 1);
         inColorList.add(Color.black);
         initInColorMap();
@@ -75,7 +73,6 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         c.gridheight = 1;
         removeAll();
         addWarning();
-        //addInstruct();
         addC1Z1();
         addC2Z2();
         addC3();
@@ -105,25 +102,6 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         c.weighty = 1.0;
         c.fill = GridBagConstraints.BOTH;
         this.add(x1, c);
-
-//        JLabel y10 = new JLabel();
-//        y10.setBackground(Largest.BACKGROUND);
-//        c.gridx = 0;
-//        c.gridy = 10;
-//        c.gridwidth = 3;
-//        c.gridheight = 1;
-//
-//        this.add(y10, c);
-//
-//        JLabel y18 = new JLabel();
-//        y18.setBackground(Largest.BACKGROUND);
-//        c.gridy = 18;
-//        this.add(y18, c);
-
-//        JLabel y27 = new JLabel();
-//        y27.setBackground(Largest.BACKGROUND);
-//        c.gridy = 27;
-//        this.add(y27, c);
     }
 
     private void addRandom(){
@@ -461,16 +439,6 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         c.gridx = 2;
         add(c3ImaginaryField, c);
     }
-//    private void addInstruct(){
-//        JLabel instruct = new JLabel("<html>F(z) = C1*F(z-1)^Z1Power + C2*F(z-1)^Z2Power + C3</html>");
-//        instruct.setBackground(Largest.BACKGROUND);
-//        instruct.setForeground(Color.white);
-//        c.gridx = 0;
-//        c.gridy = 1;
-//        c.gridwidth = 3;
-//        add(instruct, c);
-//        c.gridwidth = 1;
-//    }
 
     private void addInColor(Color c){
         inColorList.add(c);
@@ -503,10 +471,12 @@ public class JuliaPanel extends JPanel implements ShapeTab{
     private void addWarning(){
         c.gridx = 0;
         c.gridy = 0;
+        c.gridwidth = 3;
         warning.setBackground(Largest.BACKGROUND);
         warning.setForeground(Largest.BACKGROUND);
         warning.setText("filler");
         this.add(warning, c);
+        c.gridwidth = 1;
     }
 
     private void setWarningText(String text){
@@ -538,8 +508,10 @@ public class JuliaPanel extends JPanel implements ShapeTab{
             public void actionPerformed(ActionEvent e) {
                 Color newColor = JColorChooser.showDialog(
                         JuliaPanel.this, "", null);
-                if (newColor != null){
+                if (newColor != null && outColorList.size() < iterations){
                     addOutColor(newColor);
+                }else{
+                    setWarningText("Too many Colors");
                 }
             }
         });
@@ -598,8 +570,10 @@ public class JuliaPanel extends JPanel implements ShapeTab{
             public void actionPerformed(ActionEvent e) {
                 Color newColor = JColorChooser.showDialog(
                         JuliaPanel.this, "", null);
-                if (newColor != null){
+                if (newColor != null && inColorList.size() < iterations){
                     addInColor(newColor);
+                }else{
+                    setWarningText("Too many Colors");
                 }
             }
         });
@@ -622,7 +596,6 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         add(remColor, c);
     }
 
-    @Override
     public void redraw(){
         initOutColorMap();
         initInColorMap();
@@ -632,11 +605,7 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         double[] outMax = new double[iterations+2];
         double[] outMin = new double[iterations+2];
         Arrays.fill(outMin, Double.MAX_VALUE);
-//        int[] dim = largest.getMainRes();
-//        int xRes = dim[0];
-//        int yRes = dim[1];
         double[][][] hold = new double[xRes][yRes][2];
-        //byte[][][] points = new byte[xRes][yRes][4];
         image = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
         double xFactor = xSpan/xRes;
         double yFactor = ySpan/yRes;
@@ -660,7 +629,6 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         }
         //could init color maps now that i know the range, remove colors never accessed
         addHold(hold, insideMax, insideMin, outMax, outMin);
-        //System.out.println(insideMax);
         largest.reset();
     }
 
@@ -674,10 +642,6 @@ public class JuliaPanel extends JPanel implements ShapeTab{
                     double p = point[1];
                     if (insideMax == 0.0 || p == insideMax) {
                         image.setRGB(x, y, inColorMap[iterations-1]);
-//                        points[x][y][0] = inColorMap[iterations - 1][0];
-//                        points[x][y][1] = inColorMap[iterations - 1][1];
-//                        points[x][y][2] = inColorMap[iterations - 1][2];
-//                        points[x][y][3] = inColorMap[iterations - 1][3];
                     }else{
                         p -= insideMin;
                         int indexLow = (int)((p*iterations)/gap);
@@ -708,28 +672,7 @@ public class JuliaPanel extends JPanel implements ShapeTab{
 
         int indexHigh = indexLow + 1;
         int c0 = colorMap[indexLow];
-//        int r0 = colorMap[indexLow][0]&0xFF;
-//        int g0 = colorMap[indexLow][1]&0xFF;
-//        int b0 = colorMap[indexLow][2]&0xFF;
-//        int a0 = colorMap[indexLow][3]&0xFF;
-
         int c1 = colorMap[indexHigh];
-//        int r1 = colorMap[indexHigh][0]&0xFF;
-//        int g1 = colorMap[indexHigh][1]&0xFF;
-//        int b1 = colorMap[indexHigh][2]&0xFF;
-//        int a1 = colorMap[indexHigh][3]&0xFF;
-//
-//        int dr = r1 - r0;
-//        int dg = g1 - g0;
-//        int db = b1 - b0;
-//        int da = a1 - a0;
-//
-//        byte[] ans = new byte[4];
-//        ans[0] = (byte) (r0 + local * dr);
-//        ans[1] = (byte) (g0 + local * dg);
-//        ans[2] = (byte) (b0 + local * db);
-//        ans[3] = (byte) (a0 + local * da);
-
         return Stamp.blend(c0, c1, 1.0 - local);
     }
 
@@ -812,23 +755,7 @@ public class JuliaPanel extends JPanel implements ShapeTab{
             double localRel = (globalRel - (index0 * colorDelta)) / colorDelta;
 
             int c0 = inColorList.get(index0).getRGB();
-//            int r0 = c0.getRed();
-//            int g0 = c0.getGreen();
-//            int b0 = c0.getBlue();
-//            int a0 = c0.getAlpha();
-
             int c1 = inColorList.get(index1).getRGB();
-//            int r1 = c1.getRed();
-//            int g1 = c1.getGreen();
-//            int b1 = c1.getBlue();
-//            int a1 = c1.getAlpha();
-//
-//            r0 += (localRel * (r1-r0));
-//            g0 += (localRel * (g1-g0));
-//            b0 += (localRel * (b1-b0));
-//            a0 += (localRel * (a1-a0));
-//
-//            inColorMap[i] =  a0 << 24 | r0 << 16 | g0 << 8 | b0;
             inColorMap[i] = Stamp.blend(c0, c1, 1.0 - localRel);
 
         }
@@ -858,53 +785,12 @@ public class JuliaPanel extends JPanel implements ShapeTab{
             double globalRel = (double)i / (iterations-1);
             int index0 = (int)(globalRel / colorDelta);
             int index1 = Math.min(outColorList.size()-1, index0 + 1);
-//            int index1 = Math.min((int)(globalRel / colorDelta) + 1, colorList.size()-1);
-//            int index0 = Math.max(0, index1 - 1);
-            //double localRel = (globalRel - index0 * colorDelta) / colorDelta;
             double localRel = (globalRel - (index0*colorDelta)) / colorDelta;
-//            double dis1 = (index1 - globalRel) / colorDelta;
-//            double localRel;
-//            if (dis1 == 0.0){
-//                localRel = 1.0;
-//            }else{
-//                localRel = dis0/dis1;
-//            }
 
             int c0 = outColorList.get(index0).getRGB();
-//            int r0 = c0.getRed();
-//            int g0 = c0.getGreen();
-//            int b0 = c0.getBlue();
-//            int a0 = c0.getAlpha();
-
             int c1 = outColorList.get(index1).getRGB();
-//            int r1 = c1.getRed();
-//            int g1 = c1.getGreen();
-//            int b1 = c1.getBlue();
-//            int a1 = c1.getAlpha();
-//
-//            r0 += (localRel * (r1-r0));
-//            g0 += (localRel * (g1-g0));
-//            b0 += (localRel * (b1-b0));
-//            a0 += (localRel * (a1-a0));
-//
-//            outColorMap[i] =  a0 << 24 | r0 << 16 | g0 << 8 | b0;
-
-//            int dr = r1-r0;
-//            int dg = g1-g0;
-//            int db = b1-b0;
-//            int da = a1-a0;
-//
-//            outColorMap[i][0] = (byte)(r0 + localRel * dr);
-//            outColorMap[i][1] = (byte)(g0 + localRel * dg);
-//            outColorMap[i][2] = (byte)(b0 + localRel * db);
-//            outColorMap[i][3] = (byte)(a0 + localRel * da);
             outColorMap[i] = Stamp.blend(c0, c1, 1.0 - localRel);
         }
-    }
-
-    @Override
-    public LinkedList<Vertex> getShape() {
-        return null;
     }
 
     @Override
@@ -916,9 +802,6 @@ public class JuliaPanel extends JPanel implements ShapeTab{
 
     @Override
     public void click(int x, int y) {
-//        int[] dim = largest.getMainRes();
-//        int xRes = dim[0];
-//        int yRes = dim[1];
         double xFactor = xSpan/xRes;
         double yFactor = ySpan/yRes;
         int xResCenter = xRes/2;

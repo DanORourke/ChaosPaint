@@ -1,28 +1,16 @@
+import java.awt.*;
 
 public class Vertex {
-    private int x = 0;
-    private int y = 0;
-    private int r = 0;
-    private int g = 0;
-    private int b = 0;
-    private int a = 0;
-    private double gravity = 0.5;
-    private double probability = 0.5;
+    private int id;
+    private int x;
+    private int y;
+    private int c;
 
-    Vertex(int x, int y){
+    Vertex(int id, int x, int y, int c){
+        this.id = id;
         this.x = x;
         this.y = y;
-    }
-
-    Vertex(int x, int y, int r, int g, int b, int a, double gravity, double probability){
-        this.x = x;
-        this.y = y;
-        this.r = r;
-        this.g = g;
-        this.b = b;
-        this.a = a;
-        this.gravity = gravity;
-        this.probability = probability;
+        this.c = c;
     }
 
     public int getX() {
@@ -41,52 +29,20 @@ public class Vertex {
         this.y = y;
     }
 
-    public int getR() {
-        return r;
+    public int getC() {
+        return c;
     }
 
-    public void setR(int r) {
-        this.r = r;
+    public void setC(int c) {
+        this.c = c;
     }
 
-    public int getG() {
-        return g;
+
+    public int getId() {
+        return id;
     }
 
-    public void setG(int g) {
-        this.g = g;
+    public void setId(int id) {
+        this.id = id;
     }
-
-    public int getB() {
-        return b;
-    }
-
-    public void setB(int b) {
-        this.b = b;
-    }
-
-    public int getA() {
-        return a;
-    }
-
-    public void setA(int a) {
-        this.a = a;
-    }
-
-    public double getGravity() {
-        return gravity;
-    }
-
-    public void setGravity(double gravity) {
-        this.gravity = gravity;
-    }
-
-    public double getProbability() {
-        return probability;
-    }
-
-    public void setProbability(double probability) {
-        this.probability = probability;
-    }
-
 }

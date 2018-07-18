@@ -9,8 +9,8 @@ public class StampPanel extends JPanel implements ShapeTab{
     private GridBagConstraints c = new GridBagConstraints();
     private JLabel warning = new JLabel();
     private Stamp stamp = new Stamp();
-    int xRes;
-    int yRes;
+    private int xRes;
+    private int yRes;
     private BufferedImage image;
 
     StampPanel(Largest largest){
@@ -51,13 +51,17 @@ public class StampPanel extends JPanel implements ShapeTab{
         addWarning();
         addDimensions();
         addReps();
-        addDistance();
         addStartTheta();
-        addDeltaTheta();
-        addSpinRate();
-        addScale();
+        addDistance1();
+        addDeltaTheta1();
+        addSpinRate1();
+        addScale1();
+        addDistance2();
+        addDeltaTheta2();
+        addSpinRate2();
+        addScale2();
         addHowAdd();
-        addFlipRep();
+        addUse();
         addRemoveAlpha();
         addFillAlpha();
         addChangeColor();
@@ -68,7 +72,6 @@ public class StampPanel extends JPanel implements ShapeTab{
 
     @Override
     public void reset(){
-        //stamp.setData(largest.getStamp().getData());
         updateFields();
         revalidate();
         repaint();
@@ -96,7 +99,7 @@ public class StampPanel extends JPanel implements ShapeTab{
         });
 
         c.gridx = 0;
-        c.gridy = 12;
+        c.gridy = 16;
         this.add(how, c);
         c.gridx = 2;
         this.add(howField, c);
@@ -124,7 +127,7 @@ public class StampPanel extends JPanel implements ShapeTab{
         });
 
         c.gridx = 0;
-        c.gridy = 13;
+        c.gridy = 17;
         this.add(how, c);
         c.gridx = 2;
         this.add(howField, c);
@@ -150,7 +153,7 @@ public class StampPanel extends JPanel implements ShapeTab{
         });
 
         c.gridx = 0;
-        c.gridy = 14;
+        c.gridy = 18;
         this.add(cButton, c);
         c.gridx = 2;
         this.add(cPanel, c);
@@ -178,7 +181,7 @@ public class StampPanel extends JPanel implements ShapeTab{
         });
 
         c.gridx = 0;
-        c.gridy = 15;
+        c.gridy = 19;
         this.add(hcc, c);
         c.gridx = 2;
         this.add(hccField, c);
@@ -194,7 +197,7 @@ public class StampPanel extends JPanel implements ShapeTab{
             }
         });
         c.gridx = 0;
-        c.gridy = 16;
+        c.gridy = 20;
         this.add(ts, c);
     }
 
@@ -234,7 +237,7 @@ public class StampPanel extends JPanel implements ShapeTab{
         });
 
         c.gridx = 0;
-        c.gridy = 9;
+        c.gridy = 15;
         this.add(how, c);
         c.gridx = 2;
         this.add(howField, c);
@@ -287,30 +290,20 @@ public class StampPanel extends JPanel implements ShapeTab{
         x1.setBackground(Largest.BACKGROUND);
         c.gridx = 1;
         c.gridy = 1;
-        c.gridheight = 16;
+        c.gridheight = 20;
         c.weightx = 0.2;
         c.weighty = 1.0;
         c.fill = GridBagConstraints.BOTH;
         this.add(x1, c);
 
-        JLabel y11 = new JLabel();
-        y11.setBackground(Largest.BACKGROUND);
-        c.gridx = 0;
-        c.gridy = 11;
-        c.gridwidth = 3;
-        c.gridheight = 1;
-
-        this.add(y11, c);
-
-//        JLabel y18 = new JLabel();
-//        y18.setBackground(Largest.BACKGROUND);
-//        c.gridy = 10;
-//        this.add(y18, c);
-
-//        JLabel y27 = new JLabel();
-//        y27.setBackground(Largest.BACKGROUND);
-//        c.gridy = 27;
-//        this.add(y27, c);
+//        JLabel y11 = new JLabel();
+//        y11.setBackground(Largest.BACKGROUND);
+//        c.gridx = 0;
+//        c.gridy = 11;
+//        c.gridwidth = 3;
+//        c.gridheight = 1;
+//
+//        this.add(y11, c);
     }
 
     void stampify(int[][] st){
@@ -347,41 +340,55 @@ public class StampPanel extends JPanel implements ShapeTab{
         timer.start();
     }
 
-    private void addFlipRep() {
-        JCheckBox xcheck = new JCheckBox("Flip Horizontal");
-        xcheck.setSelected(stamp.isXflipRepetition());
+    private void addUse() {
+        JCheckBox xcheck = new JCheckBox("Use 1");
+        xcheck.setSelected(stamp.isUse1());
         xcheck.setBackground(Largest.BACKGROUND);
         xcheck.setForeground(Color.WHITE);
-        JCheckBox ycheck = new JCheckBox("Flip Vertical");
-        ycheck.setSelected(stamp.isYflipRepetition());
+        JCheckBox ycheck = new JCheckBox("Use 2");
+        ycheck.setSelected(stamp.isUse2());
         ycheck.setBackground(Largest.BACKGROUND);
         ycheck.setForeground(Color.WHITE);
+        JCheckBox leafCheck = new JCheckBox("Only Leaf");
+        leafCheck.setSelected(stamp.isOnlyLeaf());
+        leafCheck.setBackground(Largest.BACKGROUND);
+        leafCheck.setForeground(Color.WHITE);
 
         xcheck.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                stamp.setXflipRepetition(xcheck.isSelected());
+                stamp.setUse1(xcheck.isSelected());
                 afterChange();
             }
         });
         ycheck.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                stamp.setYflipRepetition(ycheck.isSelected());
+                stamp.setUse2(ycheck.isSelected());
+                afterChange();
+            }
+        });
+        leafCheck.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                stamp.setOnlyLeaf(leafCheck.isSelected());
                 afterChange();
             }
         });
 
         c.gridx = 0;
-        c.gridy = 10;
+        c.gridy = 13;
         this.add(xcheck, c);
         c.gridx = 2;
         this.add(ycheck, c);
+        c.gridx = 0;
+        c.gridy = 14;
+        this.add(leafCheck, c);
     }
 
-    private void addScale(){
-        JTextField scaleField = new JTextField(String.valueOf(stamp.getScale()));
-        JButton scale = new JButton("Scale");
+    private void addScale1(){
+        JTextField scaleField = new JTextField(String.valueOf(stamp.getScale1()));
+        JButton scale = new JButton("Scale 1");
         scale.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -390,13 +397,13 @@ public class StampPanel extends JPanel implements ShapeTab{
                     if (s > 1.0){
                         setWarningText("Must be <= 1.0");
                     }else{
-                        stamp.setScale(s);
+                        stamp.setScale1(s);
                         afterChange();
                     }
                 }catch (NumberFormatException e1){
                     setWarningText("Input a double");
                 }
-                scaleField.setText(String.valueOf(stamp.getScale()));
+                scaleField.setText(String.valueOf(stamp.getScale1()));
             }
         });
 
@@ -407,20 +414,48 @@ public class StampPanel extends JPanel implements ShapeTab{
         this.add(scaleField, c);
     }
 
-    private void addSpinRate(){
-        JTextField spinField = new JTextField(String.valueOf(stamp.getSpinRate()));
-        JButton spin = new JButton("Change Spin");
+    private void addScale2(){
+        JTextField scaleField = new JTextField(String.valueOf(stamp.getScale2()));
+        JButton scale = new JButton("Scale 2");
+        scale.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    Double s = Double.parseDouble(scaleField.getText());
+                    if (s > 1.0){
+                        setWarningText("Must be <= 1.0");
+                    }else{
+                        stamp.setScale2(s);
+                        afterChange();
+                    }
+                }catch (NumberFormatException e1){
+                    setWarningText("Input a double");
+                }
+                scaleField.setText(String.valueOf(stamp.getScale2()));
+            }
+        });
+
+        c.gridx = 0;
+        c.gridy = 12;
+        this.add(scale, c);
+        c.gridx = 2;
+        this.add(scaleField, c);
+    }
+
+    private void addSpinRate1(){
+        JTextField spinField = new JTextField(String.valueOf(stamp.getSpinRate1()));
+        JButton spin = new JButton("Spin 1");
         spin.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
                     int d = Integer.parseInt(spinField.getText());
-                    stamp.setSpinRate(d);
+                    stamp.setSpinRate1(d);
                     afterChange();
                 }catch (NumberFormatException e1){
                     setWarningText("Spin each repetition");
                 }
-                spinField.setText(String.valueOf(stamp.getSpinRate()));
+                spinField.setText(String.valueOf(stamp.getSpinRate1()));
             }
         });
 
@@ -431,20 +466,44 @@ public class StampPanel extends JPanel implements ShapeTab{
         this.add(spinField, c);
     }
 
-    private void addDeltaTheta(){
-        JTextField deltaField = new JTextField(String.valueOf(stamp.getDeltaDirection()));
-        JButton delta = new JButton("Change Angle");
+    private void addSpinRate2(){
+        JTextField spinField = new JTextField(String.valueOf(stamp.getSpinRate2()));
+        JButton spin = new JButton("Spin 2");
+        spin.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int d = Integer.parseInt(spinField.getText());
+                    stamp.setSpinRate2(d);
+                    afterChange();
+                }catch (NumberFormatException e1){
+                    setWarningText("Spin each repetition");
+                }
+                spinField.setText(String.valueOf(stamp.getSpinRate2()));
+            }
+        });
+
+        c.gridx = 0;
+        c.gridy = 11;
+        this.add(spin, c);
+        c.gridx = 2;
+        this.add(spinField, c);
+    }
+
+    private void addDeltaTheta1(){
+        JTextField deltaField = new JTextField(String.valueOf(stamp.getDeltaDirection1()));
+        JButton delta = new JButton("Angle 1");
         delta.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
                     int d = Integer.parseInt(deltaField.getText());
-                    stamp.setDeltaDirection(d);
+                    stamp.setDeltaDirection1(d);
                     afterChange();
                 }catch (NumberFormatException e1){
                     setWarningText("Angle change each repetition");
                 }
-                deltaField.setText(String.valueOf(stamp.getDeltaDirection()));
+                deltaField.setText(String.valueOf(stamp.getDeltaDirection1()));
             }
         });
 
@@ -455,25 +514,73 @@ public class StampPanel extends JPanel implements ShapeTab{
         this.add(deltaField, c);
     }
 
-    private void addDistance(){
-        JTextField distanceField = new JTextField(String.valueOf(stamp.getDistance()));
-        JButton distance = new JButton("Distance");
+    private void addDeltaTheta2(){
+        JTextField deltaField = new JTextField(String.valueOf(stamp.getDeltaDirection2()));
+        JButton delta = new JButton("Angle 2");
+        delta.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int d = Integer.parseInt(deltaField.getText());
+                    stamp.setDeltaDirection2(d);
+                    afterChange();
+                }catch (NumberFormatException e1){
+                    setWarningText("Angle change each repetition");
+                }
+                deltaField.setText(String.valueOf(stamp.getDeltaDirection2()));
+            }
+        });
+
+        c.gridx = 0;
+        c.gridy = 10;
+        this.add(delta, c);
+        c.gridx = 2;
+        this.add(deltaField, c);
+    }
+
+    private void addDistance1(){
+        JTextField distanceField = new JTextField(String.valueOf(stamp.getDistance1()));
+        JButton distance = new JButton("Distance 1");
         distance.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
                     int d = Integer.parseInt(distanceField.getText());
-                    stamp.setDistance(d);
+                    stamp.setDistance1(d);
                     afterChange();
                 }catch (NumberFormatException e1){
                     setWarningText("How far away");
                 }
-                distanceField.setText(String.valueOf(stamp.getDistance()));
+                distanceField.setText(String.valueOf(stamp.getDistance1()));
             }
         });
 
         c.gridx = 0;
-        c.gridy = 4;
+        c.gridy = 5;
+        this.add(distance, c);
+        c.gridx = 2;
+        this.add(distanceField, c);
+    }
+
+    private void addDistance2(){
+        JTextField distanceField = new JTextField(String.valueOf(stamp.getDistance2()));
+        JButton distance = new JButton("Distance 2");
+        distance.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int d = Integer.parseInt(distanceField.getText());
+                    stamp.setDistance2(d);
+                    afterChange();
+                }catch (NumberFormatException e1){
+                    setWarningText("How far away");
+                }
+                distanceField.setText(String.valueOf(stamp.getDistance2()));
+            }
+        });
+
+        c.gridx = 0;
+        c.gridy = 9;
         this.add(distance, c);
         c.gridx = 2;
         this.add(distanceField, c);
@@ -497,7 +604,7 @@ public class StampPanel extends JPanel implements ShapeTab{
         });
 
         c.gridx = 0;
-        c.gridy = 5;
+        c.gridy = 4;
         this.add(start, c);
         c.gridx = 2;
         this.add(startField, c);

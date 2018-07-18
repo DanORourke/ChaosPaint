@@ -18,12 +18,17 @@ public class Stamp {
     private double howAdd = 0.5;
     private int reps = 0;
     private int startingDirection = 0;
-    private int distance = 0;
-    private int deltaDirection = 0;
-    private int spinRate = 0;
-    private double scale = 1.0;
-    private boolean xflipRepetition = false;
-    private boolean yflipRepetition = false;
+    private int distance1 = 0;
+    private int deltaDirection1 = 0;
+    private int spinRate1 = 0;
+    private double scale1 = 1.0;
+    private int distance2 = 0;
+    private int deltaDirection2 = 0;
+    private int spinRate2 = 0;
+    private double scale2 = 1.0;
+    private boolean use1 = false;
+    private boolean use2 = false;
+    private boolean onlyLeaf = false;
     private int minAlpha = 0;
     private int fillAlpha = 255;
     private int deltaColor = 0;
@@ -35,14 +40,6 @@ public class Stamp {
         width = 0;
         height = 0;
         empty = true;
-    }
-
-    Stamp(BufferedImage image){
-        this.data = convertImage(image);
-        this.width = data.length;
-        this.height = data[0].length;
-        this.xOffset = width/2;
-        this.yOffset = height/2;
     }
 
     Stamp(int[][] data){
@@ -110,15 +107,6 @@ public class Stamp {
         return  (a << 24) | (r << 16) | (g << 8) | b ;
     }
 
-//    void stamp(BufferedImage image){
-//        if (empty){
-//            return;
-//        }
-//        int[][] adjusted = transformRaw(data);
-//        stamp(adjusted, image, xOffset, yOffset);
-//        rep(1, adjusted, image, xOffset, yOffset);
-//    }
-
     void mainStamp(BufferedImage image){
         if (empty){
             return;
@@ -132,13 +120,16 @@ public class Stamp {
             return;
         }
         int[][] adjusted = transformSPanel(data);
-        BufferedImage temp = new BufferedImage(image.getWidth() * 2, image.getHeight() * 2,
+        int factor = 2;
+        BufferedImage temp = new BufferedImage(image.getWidth() * factor, image.getHeight() * factor,
                 BufferedImage.TYPE_INT_ARGB);
 
         xOffset = image.getWidth();
         yOffset = image.getHeight();
-        stamp(adjusted, temp, xOffset, yOffset);
-        rep(1, adjusted, temp, xOffset, yOffset);
+        if(!onlyLeaf || reps == 0){
+            stamp(adjusted, temp, xOffset, yOffset);
+        }
+        repTemp(1, adjusted, temp, xOffset, yOffset,startingDirection - 90);
         makeFit(temp, image);
     }
 
@@ -183,94 +174,111 @@ public class Stamp {
         }
     }
 
-    private void rep(int depth, int[][] verb, BufferedImage image, int xo, int yo){
-        if (depth > reps || depth > 99){
+    private void repTemp(int depth, int[][] verb, BufferedImage image, int xo, int yo, int a){
+        if (depth > reps || depth > 99 || (!use1 && !use2)){
             return;
         }
         int[][] next = copyArray(verb);
-        if (depth%2 == 1 && (xflipRepetition || yflipRepetition)){
-            next = flipRep(next);
+
+        if (use1){
+            int xn1 = xo;
+            int yn1 = yo;
+            int d1 = (int)(distance1 * Math.pow(scale1, depth));
+            int a1 = a + deltaDirection1 %360;
+            yn1 += Math.sin((Math.PI * a1)/180)*d1;
+            xn1 += Math.cos((Math.PI * a1)/180)*d1;
+
+            int[][] next1 = transformRec(next, true);
+            if(!onlyLeaf || depth == reps){
+                stamp(next1, image, xn1, yn1);
+            }
+
+            repTemp(depth + 1, next1, image, xn1, yn1, a1);
         }
-        int xn = xo;
-        int yn = yo;
-        int d = distance;
-        int a = startingDirection;
-        for (int i = 0; i < depth; i++){
-            d = (int)(d * scale);
-            a += deltaDirection %360;
-            yn += Math.sin((Math.PI * a)/180)*d;
-            xn += Math.cos((Math.PI * a)/180)*d;
+
+        if (use2){
+            int xn2 = xo;
+            int yn2 = yo;
+
+            int d2 = (int)(distance2 * Math.pow(scale2, depth));
+            int a2 = a + deltaDirection2 %360;
+            yn2 += Math.sin((Math.PI * a2)/180)*d2;
+            xn2 += Math.cos((Math.PI * a2)/180)*d2;
+
+            int[][] next2 = transformRec(next, false);
+            if(!onlyLeaf || depth == reps){
+                stamp(next2, image, xn2, yn2);
+            }
+            repTemp(depth + 1, next2, image, xn2, yn2, a2);
         }
-        next = transformRec(next, depth);
-        stamp(next, image, xn, yn);
-        rep(++depth, verb, image, xo, yo);
     }
 
-    private int[][] flipRep(int[][] orig){
-        double xf = 1.0;
-        double yf = 1.0;
-        if (xflipRepetition){
-            xf = -1.0;
-        }
-        if (yflipRepetition){
-            yf = -1.0;
-        }
-        AffineTransform at = new AffineTransform();
-        at.scale(xf, yf);
+//    private void rep(int depth, int[][] verb, BufferedImage image, int xo, int yo){
+//        if (depth > reps || depth > 99){
+//            return;
+//        }
+//        int[][] next = copyArray(verb);
+//        if (depth%2 == 1 && (use1 || use2)){
+//            next = flipRep(next);
+//        }
+//        int xn = xo;
+//        int yn = yo;
+//        int d = distance;
+//        int a = startingDirection;
+//        for (int i = 0; i < depth; i++){
+//            d = (int)(d * scale);
+//            a += deltaDirection %360;
+//            yn += Math.sin((Math.PI * a)/180)*d;
+//            xn += Math.cos((Math.PI * a)/180)*d;
+//        }
+//        next = transformRec(next, true);
+//        stamp(next, image, xn, yn);
+//        rep(++depth, verb, image, xo, yo);
+//    }
 
-        return transform(orig, at);
-    }
+//    private int[][] flipRep(int[][] orig){
+//        double xf = 1.0;
+//        double yf = 1.0;
+//        if (use1){
+//            xf = -1.0;
+//        }
+//        if (use2){
+//            yf = -1.0;
+//        }
+//        AffineTransform at = new AffineTransform();
+//        at.scale(xf, yf);
+//
+//        return transform(orig, at);
+//    }
 
-    private int[][] transformRec(int[][] orig, int depth){
-        int theta = (depth * spinRate)%360;
+    private int[][] transformRec(int[][] orig, boolean positive){
+        int theta;
+        if(positive){
+            theta = spinRate1;
+        }else{
+            theta = spinRate2;
+        }
+
+        double scale;
+        if(positive){
+            scale = scale1;
+        }else{
+            scale = scale2;
+        }
+
         if (scale == 1.0 && theta == 0){
             return copyArray(orig);
         }
-
-        double useScale = Math.pow(scale, depth);
-
         double xSize = (double)(orig.length);
         double ySize = (double)(orig[0].length);
 
         AffineTransform at = new AffineTransform();
         at.translate(xSize/2, ySize/2);
-        at.scale(useScale, useScale);
+        at.scale(scale, scale);
         at.rotate((Math.PI * theta)/180);
         at.translate(xSize/-2, ySize/-2);
         return transform(orig, at);
     }
-//
-//    private byte[][][] refineArray(byte[][][] original){
-//        int width = original.length;
-//        int height = original[0].length;
-//        int minx = width;
-//        int maxx = -1;
-//        int miny = height;
-//        int maxy = -1;
-//        for (int x = 0; x < width; x++){
-//            for(int y = 0; y < height; y++){
-//                if ((original[x][y][3]&0xFF) != 0){
-//                    minx = Math.min(minx, x);
-//                    miny = Math.min(miny, y);
-//                    maxx = Math.max(maxx, x);
-//                    maxy = Math.max(maxy, y);
-//                }
-//            }
-//        }
-//
-//        width = maxx - minx + 1;
-//        height = maxy - miny + 1;
-//        byte[][][] next = new byte[width][height][4];
-//        for (int x = 0; x < width; x++){
-//            for (int y = 0; y < height; y++){
-//                next[x][y][0] = original[x + minx][y + miny][0];
-//                next[x][y][1] = original[x + minx][y + miny][1];
-//                next[x][y][2] = original[x + minx][y + miny][2];
-//                next[x][y][3] = original[x + minx][y + miny][3];
-//            }
-//        }
-//        return next;
-//    }
 
     private int[][] transform(int[][] orig, AffineTransform at){
         int minx = Integer.MAX_VALUE;
@@ -435,30 +443,6 @@ public class Stamp {
                     }else{
                         image.setRGB(nx, ny, verb[x][y]);
                     }
-
-//                    if ((c & 0xFF000000) >> 24 == 0){
-//                        Color co = new Color(verb[x][y][0] & 0xFF, verb[x][y][1] & 0xFF,
-//                                verb[x][y][2] & 0xFF, verb[x][y][3] & 0xFF);
-//                        image.setRGB(x, y, co.getRGB());
-//                    }else{
-//                        if (howAdd > 0){
-//                            Color co = new Color(verb[x][y][0] & 0xFF, verb[x][y][1] & 0xFF,
-//                                    verb[x][y][2] & 0xFF, verb[x][y][3] & 0xFF);
-//                            image.setRGB(x, y, co.getRGB());
-////                            noun[nx][ny][0] = verb[x][y][0];
-////                            noun[nx][ny][1] = verb[x][y][1];
-////                            noun[nx][ny][2] = verb[x][y][2];
-////                            noun[nx][ny][3] = verb[x][y][3];
-//
-//                        }else if (howAdd == 0){
-//                            int newR = ((c & 0x00FF0000)>> 16 + (verb[x][y][0] & 0xFF))/2;
-//                            int newG = ((c & 0x0000FF00)>> 8 + (verb[x][y][1] & 0xFF))/2;
-//                            int newB = ((c & 0x000000FF) + (verb[x][y][2] & 0xFF))/2;
-//                            int newA = ((c & 0xFF000000)>> 24 + (verb[x][y][3] & 0xFF))/2;
-//                            Color co = new Color(newR, newG, newB, newA);
-//                            image.setRGB(x, y, co.getRGB());
-//                        }
-//                    }
                 }
             }
         }
@@ -485,7 +469,7 @@ public class Stamp {
     }
 
     public void setRotationDegree(int rotationDegree) {
-        this.rotationDegree = rotationDegree;
+        this.rotationDegree = rotationDegree%360;
     }
 
     public int[][] getData() {
@@ -580,52 +564,20 @@ public class Stamp {
         this.startingDirection = startingDirection;
     }
 
-    public int getDeltaDirection() {
-        return deltaDirection;
+    public boolean isUse1() {
+        return use1;
     }
 
-    public void setDeltaDirection(int deltaDirection) {
-        this.deltaDirection = deltaDirection;
+    public void setUse1(boolean use1) {
+        this.use1 = use1;
     }
 
-    public double getScale() {
-        return scale;
+    public boolean isUse2() {
+        return use2;
     }
 
-    public void setScale(double scale) {
-        this.scale = scale;
-    }
-
-    public int getDistance() {
-        return distance;
-    }
-
-    public void setDistance(int distance) {
-        this.distance = distance;
-    }
-
-    public boolean isXflipRepetition() {
-        return xflipRepetition;
-    }
-
-    public void setXflipRepetition(boolean xflipRepetition) {
-        this.xflipRepetition = xflipRepetition;
-    }
-
-    public boolean isYflipRepetition() {
-        return yflipRepetition;
-    }
-
-    public void setYflipRepetition(boolean yflipRepetition) {
-        this.yflipRepetition = yflipRepetition;
-    }
-
-    public int getSpinRate() {
-        return spinRate;
-    }
-
-    public void setSpinRate(int spinRate) {
-        this.spinRate = spinRate;
+    public void setUse2(boolean use2) {
+        this.use2 = use2;
     }
 
     public int getMinAlpha() {
@@ -658,5 +610,77 @@ public class Stamp {
 
     public void setHowDeltaColor(double howDeltaColor) {
         this.howDeltaColor = howDeltaColor;
+    }
+
+    public int getDistance1() {
+        return distance1;
+    }
+
+    public void setDistance1(int distance1) {
+        this.distance1 = distance1;
+    }
+
+    public int getDeltaDirection1() {
+        return deltaDirection1;
+    }
+
+    public void setDeltaDirection1(int deltaDirection1) {
+        this.deltaDirection1 = deltaDirection1;
+    }
+
+    public int getSpinRate1() {
+        return spinRate1;
+    }
+
+    public void setSpinRate1(int spinRate1) {
+        this.spinRate1 = spinRate1;
+    }
+
+    public double getScale1() {
+        return scale1;
+    }
+
+    public void setScale1(double scale1) {
+        this.scale1 = scale1;
+    }
+
+    public int getDistance2() {
+        return distance2;
+    }
+
+    public void setDistance2(int distance2) {
+        this.distance2 = distance2;
+    }
+
+    public int getDeltaDirection2() {
+        return deltaDirection2;
+    }
+
+    public void setDeltaDirection2(int deltaDirection2) {
+        this.deltaDirection2 = deltaDirection2;
+    }
+
+    public int getSpinRate2() {
+        return spinRate2;
+    }
+
+    public void setSpinRate2(int spinRate2) {
+        this.spinRate2 = spinRate2;
+    }
+
+    public double getScale2() {
+        return scale2;
+    }
+
+    public void setScale2(double scale2) {
+        this.scale2 = scale2;
+    }
+
+    public boolean isOnlyLeaf() {
+        return onlyLeaf;
+    }
+
+    public void setOnlyLeaf(boolean onlyLeaf) {
+        this.onlyLeaf = onlyLeaf;
     }
 }

@@ -5,19 +5,22 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
-import java.util.LinkedList;
 
 public class MainPanel extends JPanel implements ShapeTab{
     private final Largest largest;
     private GridBagConstraints c = new GridBagConstraints();
     private JLabel warning = new JLabel();
-    private JButton[] shows = new JButton[3];
+    private JButton[] shows = new JButton[2];
     private int xRes = 1024;
     private int yRes = 1024;
-    private BufferedImage stampImage = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
     private BufferedImage tempImage = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
+    private BufferedImage tempStampImage = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
     private BufferedImage finalImage = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
-    private int whichImage = 2; // 2 = stamp; 1 = temp; 0 = final
+    private BufferedImage finalStampImage = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
+    private int whichImage = 2; // 0 = temp; 1 = tempStamp; 2 = final; 3 = finalStamp
+    private boolean showOverTemp = true;
+    private boolean showOverFinal = true;
+    private boolean showFinal = true;
     private Stamp stamp = new Stamp();
     private JTextField xOff;
     private JTextField yOff;
@@ -45,17 +48,11 @@ public class MainPanel extends JPanel implements ShapeTab{
         addShear();
         addRotate();
         addHowAdd();
-//        addReps();
-//        addDistance();
-//        addStartTheta();
-//        addDeltaTheta();
-//        addSpinRate();
-//        addScale();
-//        addFlipRep();
+        addOver();
         addStampFinal();
-        addNewStamp();
+        addStampifyTemp();
+        addStampifyFinal();
         addAction();
-        addStamp();
         addTemp();
         addFinal();
         addFile();
@@ -67,13 +64,14 @@ public class MainPanel extends JPanel implements ShapeTab{
 
     private void setFocus(){
         //System.out.println(whichPoints);
-        for (int i = 0; i < 3; i++){
-            if (i == whichImage){
-                shows[i].setForeground(new Color(10, 150, 10));
-            }else{
-                shows[i].setForeground(null);
-            }
+        if(whichImage > 1){
+            shows[0].setForeground(new Color(10, 150, 10));
+            shows[1].setForeground(null);
+        }else{
+            shows[1].setForeground(new Color(10, 150, 10));
+            shows[0].setForeground(null);
         }
+
         revalidate();
         repaint();
     }
@@ -91,15 +89,13 @@ public class MainPanel extends JPanel implements ShapeTab{
                     }else{
                         xRes = its;
                         yRes = its;
-                        stampImage = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
                         tempImage = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
                         finalImage = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
                         stamp.setxOffset(xRes/2);
                         stamp.setyOffset(yRes/2);
-                        stamp.mainStamp(stampImage);
+                        resetSImage();
                         largest.changeRes(getRes());
                         largest.tellSPanelRes(getRes());
-                        redraw();
                     }
                 }catch (NumberFormatException e1){
                     setWarningText("Enter an int greater than 0");
@@ -109,7 +105,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         });
 
         c.gridx = 0;
-        c.gridy = 26;
+        c.gridy = 20;
         add(resBtn, c);
         c.gridx = 2;
         add(resField, c);
@@ -119,7 +115,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         JButton save = createSave();
         JButton open = createOpen();
         c.gridx = 0;
-        c.gridy = 25;
+        c.gridy = 19;
         this.add(save, c);
         c.gridx = 2;
         this.add(open, c);
@@ -150,10 +146,10 @@ public class MainPanel extends JPanel implements ShapeTab{
     private void addFinal() {
         JButton sFinal = createSFinal();
         JButton cFinal = createCFinal();
-        c.gridx = 0;
-        c.gridy = 24;
-        this.add(sFinal, c);
         c.gridx = 2;
+        c.gridy = 14;
+        this.add(sFinal, c);
+        c.gridy = 18;
         this.add(cFinal, c);
     }
 
@@ -163,6 +159,7 @@ public class MainPanel extends JPanel implements ShapeTab{
             @Override
             public void actionPerformed(ActionEvent e) {
                 finalImage = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
+                resetSImage();
                 largest.reset();
             }
         });
@@ -170,26 +167,27 @@ public class MainPanel extends JPanel implements ShapeTab{
     }
 
     private JButton createSFinal() {
-        JButton showFinal = new JButton("Show Final");
-        shows[0] = showFinal;
-        showFinal.addActionListener(new ActionListener() {
+        JButton fbutton = new JButton("Show Final");
+        shows[0] = fbutton;
+        fbutton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                whichImage = 0;
+                showFinal = true;
+                setWhichImage();
                 setFocus();
                 largest.reset();
             }
         });
-        return showFinal;
+        return fbutton;
     }
 
     private void addTemp() {
         JButton sTemp = createSTemp();
         JButton cTemp = createCTemp();
         c.gridx = 0;
-        c.gridy = 23;
+        c.gridy = 14;
         this.add(sTemp, c);
-        c.gridx = 2;
+        c.gridy = 18;
         this.add(cTemp, c);
     }
 
@@ -199,6 +197,7 @@ public class MainPanel extends JPanel implements ShapeTab{
             @Override
             public void actionPerformed(ActionEvent e) {
                 tempImage = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
+                resetSImage();
                 largest.reset();
             }
         });
@@ -211,7 +210,8 @@ public class MainPanel extends JPanel implements ShapeTab{
         showTemp.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                whichImage = 1;
+                showFinal = false;
+                setWhichImage();
                 setFocus();
                 largest.reset();
             }
@@ -219,56 +219,17 @@ public class MainPanel extends JPanel implements ShapeTab{
         return showTemp;
     }
 
-    private void addStamp() {
-        JButton sStamp = createSStamp();
-//        JButton cStamp = createCStamp();
-        c.gridx = 0;
-        c.gridy = 22;
-        this.add(sStamp, c);
-//        c.gridx = 2;
-//        this.add(cStamp, c);
-    }
-
-//    private JButton createCStamp() {
-//        JButton cs = new JButton("Erase Stamp");
-//        cs.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                stamp = new Stamp();
-//                stampImage = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
-//                largest.reset();
-//            }
-//        });
-//        return cs;
-//    }
-
-    private JButton createSStamp() {
-        JButton showStamp = new JButton("Show Stamp");
-        shows[2] = showStamp;
-        showStamp.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                whichImage = 2;
-                setFocus();
-                largest.reset();
-            }
-        });
-        return showStamp;
-    }
-
     private void addAction() {
         JButton sToT = createSToT();
         JButton tToF = createTToF();
         JButton fToT = createFToT();
         c.gridx = 0;
-        c.gridy = 20;
+        c.gridy = 15;
         this.add(sToT, c);
-        c.gridx = 2;
-        c.gridy = 21;
+        c.gridy = 17;
         this.add(fToT, c);
-        c.gridy = 22;
+        c.gridx = 2;
         this.add(tToF, c);
-
     }
 
     private BufferedImage deepCopy(BufferedImage bi) {
@@ -284,6 +245,7 @@ public class MainPanel extends JPanel implements ShapeTab{
             @Override
             public void actionPerformed(ActionEvent e) {
                 tempImage = deepCopy(finalImage);
+                resetSImage();
                 largest.reset();
             }
         });
@@ -296,6 +258,7 @@ public class MainPanel extends JPanel implements ShapeTab{
             @Override
             public void actionPerformed(ActionEvent e) {
                 finalImage = deepCopy(tempImage);
+                resetSImage();
                 largest.reset();
             }
         });
@@ -307,25 +270,16 @@ public class MainPanel extends JPanel implements ShapeTab{
         st.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                stamp.mainStamp(tempImage);
+                tempImage = tempStampImage;
+                resetSImage();
                 largest.reset();
             }
         });
         return st;
     }
 
-    private void addNewStamp(){
-//        JButton ns = new JButton("???");
-//        ns.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                /// what to do with this
-//            }
-//        });
-//
-//        c.gridx = 0;
-//        c.gridy = 19;
-//        this.add(ns, c);
+
+    private void addStampifyTemp(){
 
         JButton ts = new JButton("Stampify Temp");
         ts.addActionListener(new ActionListener() {
@@ -335,8 +289,23 @@ public class MainPanel extends JPanel implements ShapeTab{
             }
         });
 
+        c.gridx = 0;
+        c.gridy = 16;
+        this.add(ts, c);
+    }
+
+    private void addStampifyFinal(){
+
+        JButton ts = new JButton("Stampify Final");
+        ts.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                largest.stampify(finalImage);
+            }
+        });
+
         c.gridx = 2;
-        c.gridy = 20;
+        c.gridy = 16;
         this.add(ts, c);
     }
 
@@ -345,206 +314,72 @@ public class MainPanel extends JPanel implements ShapeTab{
         sf.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                stamp.mainStamp(finalImage);
+                finalImage = finalStampImage;
+                resetSImage();
+                largest.reset();
+            }
+        });
+
+        c.gridx = 2;
+        c.gridy = 15;
+        this.add(sf, c);
+    }
+
+    private void resetSImage(){
+        tempStampImage = deepCopy(tempImage);
+        stamp.mainStamp(tempStampImage);
+        finalStampImage = deepCopy(finalImage);
+        stamp.mainStamp(finalStampImage);
+    }
+
+    private void addOver() {
+        JCheckBox overTemp = new JCheckBox("Show Over Temp");
+        overTemp.setSelected(showOverTemp);
+        overTemp.setBackground(Largest.BACKGROUND);
+        overTemp.setForeground(Color.WHITE);
+        JCheckBox overFinal = new JCheckBox("Show Over Final");
+        overFinal.setSelected(showOverFinal);
+        overFinal.setBackground(Largest.BACKGROUND);
+        overFinal.setForeground(Color.WHITE);
+
+        overTemp.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showOverTemp = overTemp.isSelected();
+                setWhichImage();
+                largest.reset();
+            }
+        });
+        overFinal.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showOverFinal = overFinal.isSelected();
+                setWhichImage();
                 largest.reset();
             }
         });
 
         c.gridx = 0;
-        c.gridy = 21;
-        this.add(sf, c);
+        c.gridy = 13;
+        this.add(overTemp, c);
+        c.gridx = 2;
+        this.add(overFinal, c);
     }
 
-//    private void addFlipRep() {
-//        JCheckBox xcheck = new JCheckBox("Flip Horizontal");
-//        xcheck.setSelected(largest.getStamp().isXflipRepetition());
-//        xcheck.setBackground(Largest.BACKGROUND);
-//        xcheck.setForeground(Color.WHITE);
-//        JCheckBox ycheck = new JCheckBox("Flip Vertical");
-//        ycheck.setSelected(largest.getStamp().isYflipRepetition());
-//        ycheck.setBackground(Largest.BACKGROUND);
-//        ycheck.setForeground(Color.WHITE);
-//
-//        xcheck.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                largest.getStamp().setXflipRepetition(xcheck.isSelected());
-//                largest.stampWorking();
-//            }
-//        });
-//        ycheck.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                largest.getStamp().setYflipRepetition(ycheck.isSelected());
-//                largest.stampWorking();
-//            }
-//        });
-//
-//        c.gridx = 0;
-//        c.gridy = 17;
-//        this.add(xcheck, c);
-//        c.gridx = 2;
-//        this.add(ycheck, c);
-//    }
-//
-//    private void addScale(){
-//        JTextField scaleField = new JTextField(String.valueOf(largest.getStamp().getScale()));
-//        JButton scale = new JButton("Scale");
-//        scale.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                try {
-//                    Double s = Double.parseDouble(scaleField.getText());
-//                    if (s > 1.0){
-//                        setWarningText("Must be <= 1.0");
-//                    }else{
-//                        largest.getStamp().setScale(s);
-//                        largest.stampWorking();
-//                    }
-//                }catch (NumberFormatException e1){
-//                    setWarningText("Input a double");
-//                }
-//                scaleField.setText(String.valueOf(largest.getStamp().getScale()));
-//            }
-//        });
-//
-//        c.gridx = 0;
-//        c.gridy = 16;
-//        this.add(scale, c);
-//        c.gridx = 2;
-//        this.add(scaleField, c);
-//    }
-//
-//    private void addSpinRate(){
-//        JTextField spinField = new JTextField(String.valueOf(largest.getStamp().getSpinRate()));
-//        JButton spin = new JButton("Change Spin");
-//        spin.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                try {
-//                    int d = Integer.parseInt(spinField.getText());
-//                    largest.getStamp().setSpinRate(d);
-//                    largest.stampWorking();
-//                }catch (NumberFormatException e1){
-//                    setWarningText("Spin each repetition");
-//                }
-//                spinField.setText(String.valueOf(largest.getStamp().getSpinRate()));
-//            }
-//        });
-//
-//        c.gridx = 0;
-//        c.gridy = 15;
-//        this.add(spin, c);
-//        c.gridx = 2;
-//        this.add(spinField, c);
-//    }
-//
-//    private void addDeltaTheta(){
-//        JTextField deltaField = new JTextField(String.valueOf(largest.getStamp().getDeltaDirection()));
-//        JButton delta = new JButton("Change Angle");
-//        delta.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                try {
-//                    int d = Integer.parseInt(deltaField.getText());
-//                    largest.getStamp().setDeltaDirection(d);
-//                    largest.stampWorking();
-//                }catch (NumberFormatException e1){
-//                    setWarningText("Angle change each repetition");
-//                }
-//                deltaField.setText(String.valueOf(largest.getStamp().getDeltaDirection()));
-//            }
-//        });
-//
-//        c.gridx = 0;
-//        c.gridy = 14;
-//        this.add(delta, c);
-//        c.gridx = 2;
-//        this.add(deltaField, c);
-//    }
-//
-//    private void addDistance(){
-//        JTextField distanceField = new JTextField(String.valueOf(largest.getStamp().getDistance()));
-//        JButton distance = new JButton("Distance");
-//        distance.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                try {
-//                    int d = Integer.parseInt(distanceField.getText());
-//                    largest.getStamp().setDistance(d);
-//                    largest.stampWorking();
-//                }catch (NumberFormatException e1){
-//                    setWarningText("How far away");
-//                }
-//                distanceField.setText(String.valueOf(largest.getStamp().getDistance()));
-//            }
-//        });
-//
-//        c.gridx = 0;
-//        c.gridy = 12;
-//        this.add(distance, c);
-//        c.gridx = 2;
-//        this.add(distanceField, c);
-//    }
-//
-//    private void addStartTheta(){
-//        JTextField startField = new JTextField(String.valueOf(largest.getStamp().getStartingDirection()));
-//        JButton start = new JButton("Initial Angle");
-//        start.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                try {
-//                    int r = Integer.parseInt(startField.getText());
-//                    largest.getStamp().setStartingDirection(r);
-//                    largest.stampWorking();
-//                }catch (NumberFormatException e1){
-//                    setWarningText("Direction of change");
-//                }
-//                startField.setText(String.valueOf(largest.getStamp().getStartingDirection()));
-//            }
-//        });
-//
-//        c.gridx = 0;
-//        c.gridy = 13;
-//        this.add(start, c);
-//        c.gridx = 2;
-//        this.add(startField, c);
-//    }
-//
-//    private void addReps(){
-//        JTextField repField = new JTextField(String.valueOf(largest.getStamp().getReps()));
-//        JButton how = new JButton("Repetitions");
-//        how.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                try {
-//                    int r = Integer.parseInt(repField.getText());
-//                    largest.getStamp().setReps(r);
-//                    largest.stampWorking();
-//                }catch (NumberFormatException e1){
-//                    setWarningText("Number of times drawn");
-//                }
-//                repField.setText(String.valueOf(largest.getStamp().getReps()));
-//            }
-//        });
-//
-//        c.gridx = 0;
-//        c.gridy = 11;
-//        this.add(how, c);
-//        c.gridx = 2;
-//        this.add(repField, c);
-//    }
-
-    private void resetSImage(){
-        stampImage = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
-    }
-
-    private void resetTImage(){
-        tempImage = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
-    }
-
-    private void resetFImage(){
-        finalImage = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
+    private void setWhichImage(){
+        if(showFinal){
+            if(showOverFinal){
+                whichImage = 3;
+            }else{
+                whichImage = 2;
+            }
+        }else{
+            if(showOverTemp){
+                whichImage = 1;
+            }else{
+                whichImage = 0;
+            }
+        }
     }
 
     private void addFlip() {
@@ -562,7 +397,6 @@ public class MainPanel extends JPanel implements ShapeTab{
             public void actionPerformed(ActionEvent e) {
                 stamp.setXflip(xcheck.isSelected());
                 resetSImage();
-                stamp.mainStamp(stampImage);
                 largest.reset();
             }
         });
@@ -571,7 +405,6 @@ public class MainPanel extends JPanel implements ShapeTab{
             public void actionPerformed(ActionEvent e) {
                 stamp.setYflip(ycheck.isSelected());
                 resetSImage();
-                stamp.mainStamp(stampImage);
                 largest.reset();
             }
         });
@@ -593,7 +426,6 @@ public class MainPanel extends JPanel implements ShapeTab{
                     double h = Double.parseDouble(howField.getText());
                     stamp.setHowAdd(h);
                     resetSImage();
-                    stamp.mainStamp(stampImage);
                     largest.reset();
                 }catch (NumberFormatException e1){
                     setWarningText("0 <= double <= 1");
@@ -616,10 +448,9 @@ public class MainPanel extends JPanel implements ShapeTab{
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    int t = Integer.parseInt(rotation.getText());
+                    int t = Integer.parseInt(rotation.getText())%360;
                     stamp.setRotationDegree(t);
                     resetSImage();
-                    stamp.mainStamp(stampImage);
                     largest.reset();
                 }catch (NumberFormatException e1){
                     setWarningText("Input an integer");
@@ -662,7 +493,6 @@ public class MainPanel extends JPanel implements ShapeTab{
                     Double s = Double.parseDouble(ysField.getText());
                     stamp.setYshear(s);
                     resetSImage();
-                    stamp.mainStamp(stampImage);
                     largest.reset();
                 }catch (NumberFormatException e1){
                     setWarningText("Input a double");
@@ -682,7 +512,6 @@ public class MainPanel extends JPanel implements ShapeTab{
                     Double s = Double.parseDouble(xsField.getText());
                     stamp.setXshear(s);
                     resetSImage();
-                    stamp.mainStamp(stampImage);
                     largest.reset();
                 }catch (NumberFormatException e1){
                     setWarningText("Input a double");
@@ -720,7 +549,6 @@ public class MainPanel extends JPanel implements ShapeTab{
                     int h = Integer.parseInt(heightField.getText());
                     stamp.setHeight(h);
                     resetSImage();
-                    stamp.mainStamp(stampImage);
                     largest.reset();
                 }catch (NumberFormatException e1){
                     setWarningText("Input an integer");
@@ -740,7 +568,6 @@ public class MainPanel extends JPanel implements ShapeTab{
                     int w = Integer.parseInt(widthField.getText());
                     stamp.setWidth(w);
                     resetSImage();
-                    stamp.mainStamp(stampImage);
                     largest.reset();
                 }catch (NumberFormatException e1){
                     setWarningText("Input an integer");
@@ -770,10 +597,10 @@ public class MainPanel extends JPanel implements ShapeTab{
         c.gridy = 3;
         this.add(nup, c);
         c.gridy = 4;
-        this.add(nleft, c);
+        this.add(ndown, c);
         c.gridx = 2;
         c.gridy = 3;
-        this.add(ndown, c);
+        this.add(nleft, c);
         c.gridy = 4;
         this.add(nright, c);
     }
@@ -785,7 +612,6 @@ public class MainPanel extends JPanel implements ShapeTab{
             public void actionPerformed(ActionEvent e) {
                 stamp.setyOffset(stamp.getyOffset() - 5);
                 resetSImage();
-                stamp.mainStamp(stampImage);
                 yOff.setText(String.valueOf(stamp.getyOffset()));
                 largest.reset();
             }
@@ -800,7 +626,6 @@ public class MainPanel extends JPanel implements ShapeTab{
             public void actionPerformed(ActionEvent e) {
                 stamp.setyOffset(stamp.getyOffset() + 5);
                 resetSImage();
-                stamp.mainStamp(stampImage);
                 yOff.setText(String.valueOf(stamp.getyOffset()));
                 largest.reset();
 
@@ -816,7 +641,6 @@ public class MainPanel extends JPanel implements ShapeTab{
             public void actionPerformed(ActionEvent e) {
                 stamp.setxOffset(stamp.getxOffset() - 5);
                 resetSImage();
-                stamp.mainStamp(stampImage);
                 xOff.setText(String.valueOf(stamp.getxOffset()));
                 largest.reset();
 
@@ -832,7 +656,6 @@ public class MainPanel extends JPanel implements ShapeTab{
             public void actionPerformed(ActionEvent e) {
                 stamp.setxOffset(stamp.getxOffset() + 5);
                 resetSImage();
-                stamp.mainStamp(stampImage);
                 xOff.setText(String.valueOf(stamp.getxOffset()));
                 largest.reset();
 
@@ -869,7 +692,6 @@ public class MainPanel extends JPanel implements ShapeTab{
                     int yo = Integer.parseInt(yOff.getText());
                     stamp.setyOffset(yo);
                     resetSImage();
-                    stamp.mainStamp(stampImage);
                     largest.reset();
                 }catch (NumberFormatException e1){
                     setWarningText("Input an integer");
@@ -889,7 +711,6 @@ public class MainPanel extends JPanel implements ShapeTab{
                     int xo = Integer.parseInt(xOff.getText());
                     stamp.setxOffset(xo);
                     resetSImage();
-                    stamp.mainStamp(stampImage);
                     largest.reset();
                 }catch (NumberFormatException e1){
                     setWarningText("Input an integer");
@@ -922,15 +743,6 @@ public class MainPanel extends JPanel implements ShapeTab{
 
         this.add(y12, c);
 
-//        JLabel y18 = new JLabel();
-//        y18.setBackground(Largest.BACKGROUND);
-//        c.gridy = 18;
-//        this.add(y18, c);
-
-//        JLabel y27 = new JLabel();
-//        y27.setBackground(Largest.BACKGROUND);
-//        c.gridy = 27;
-//        this.add(y27, c);
     }
 
     private void setWarningText(String text){
@@ -954,8 +766,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         stamp = new Stamp(data);
         stamp.setxOffset(xRes/2);
         stamp.setyOffset(yRes/2);
-        stampImage = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
-        stamp.mainStamp(stampImage);
+        resetSImage();
     }
 
     @Override
@@ -976,7 +787,6 @@ public class MainPanel extends JPanel implements ShapeTab{
         }
         rotation.setText(String.valueOf(stamp.getRotationDegree()));
         resetSImage();
-        stamp.mainStamp(stampImage);
     }
 
     @Override
@@ -986,25 +796,26 @@ public class MainPanel extends JPanel implements ShapeTab{
         xOff.setText(String.valueOf(stamp.getxOffset()));
         yOff.setText(String.valueOf(stamp.getyOffset()));
         resetSImage();
-        stamp.mainStamp(stampImage);
     }
 
     @Override
     public void reset(){
         addButtons();
         resetSImage();
-        stamp.mainStamp(stampImage);
+        setWhichImage();
         largest.reset();
     }
 
     @Override
     public BufferedImage getActiveImage(){
         if (whichImage == 0){
-            return finalImage;
-        }else if (whichImage == 1){
             return tempImage;
+        }else if (whichImage == 1){
+            return tempStampImage;
+        }else if (whichImage == 2){
+            return finalImage;
         }else{
-            return stampImage;
+            return finalStampImage;
         }
     }
 

@@ -4,17 +4,9 @@ import java.util.LinkedList;
 
 public interface ShapeTab {
 
-    default LinkedList<Vertex> getShape(){
-        return new LinkedList<>();
-    }
-
     int[] getRes();
 
     BufferedImage getActiveImage();
-
-    default void redraw(){
-
-    }
 
     default void reset(){
 

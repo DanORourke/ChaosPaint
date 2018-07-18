@@ -5,16 +5,11 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 
 public class CanvasPanel extends JPanel {
-    //private int pageSize = 512;
     private int xPage = 512;
     private int yPage = 512;
     private int xRes = 1024;
     private int yRes = 1024;
     private BufferedImage image = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
-//    private byte[][][] points = new byte[xRes][yRes][4]; // 0 = r; 1 g; 2 = b; 3 = a
-//    private byte[][][] pointsTemp = new byte[xRes][yRes][4]; // 0 = r; 1 g; 2 = b; 3 = a
-//    private byte[][][] pointsStamp = new byte[xRes][yRes][4]; // 0 = r; 1 g; 2 = b; 3 = a
-//    private int whichPoints = 0; // 0 = points; 1 = pointsTemp; 2 = pointsStamp
     private Largest largest;
 
     CanvasPanel(){
@@ -31,29 +26,6 @@ public class CanvasPanel extends JPanel {
         g.setFont(new Font("TimesRoman", Font.PLAIN, 20));
         super.paintComponent(g2);
         image = largest.getActiveImage();
-//        int listening = largest.getListening();//0 = main; 1 = stamp, 2 = chaos; 3 = L; 4 = box; 5 = julia
-//        byte[][][] p;
-//        if (listening != 0){
-//            p = largest.getListeningStamp().getData();
-//            if (p == null){
-//                return;
-//            }
-//        }else{
-//            if (whichPoints == 0){
-//                p = points;
-//            }else if (whichPoints == 1){
-//                p = pointsTemp;
-//            }else{
-//                p = pointsStamp;
-//            }
-//        }
-//        for (int x = 0 ; x < xRes; x++){
-//            for (int y = 0; y < yRes; y++){
-//                Color c = new Color(p[x][y][0] & 0xFF, p[x][y][1] & 0xFF,
-//                        p[x][y][2] & 0xFF, p[x][y][3] & 0xFF);
-//                image.setRGB(x, y, c.getRGB());
-//            }
-//        }
         g.drawImage(image, 0, 0, getWidth(), getHeight(), this);
 
     }
@@ -103,51 +75,7 @@ public class CanvasPanel extends JPanel {
         image = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
         revalidate();
         repaint();
-//        eraseFinal();
-//        eraseTemp();
-//        eraseWorking();
     }
-
-//    byte[][][] getPoints(){
-//        return points;
-//    }
-//
-//    int getWhichPoints(){
-//        return whichPoints;
-//    }
-//
-//    void setWhichPoints(int thisOne){
-//        this.whichPoints = thisOne;
-//        revalidate();
-//        repaint();
-//    }
-//
-//    byte[][][] getPointsTemp(){
-//        return pointsTemp;
-//    }
-//
-//    byte[][][] getPointsStamp(){
-//        return pointsStamp;
-//    }
-
-//    void eraseFinal(){
-//        points = new byte[xRes][yRes][4];
-//        revalidate();
-//        repaint();
-//    }
-//
-//    void eraseTemp(){
-//        pointsTemp = new byte[xRes][yRes][4];
-//        revalidate();
-//        repaint();
-//    }
-//
-//    void eraseWorking(){
-//        pointsStamp = new byte[xRes][yRes][4];
-//        revalidate();
-//        repaint();
-//    }
-
 
     void setLargest(Largest largest) {
         this.largest = largest;
