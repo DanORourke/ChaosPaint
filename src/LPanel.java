@@ -8,7 +8,6 @@ import java.util.*;
 
 public class LPanel extends JPanel implements ShapeTab{
     private final Largest largest;
-    private GridBagConstraints c = new GridBagConstraints();
     private JLabel warning = new JLabel();
     private int xRes;
     private int yRes;
@@ -24,7 +23,7 @@ public class LPanel extends JPanel implements ShapeTab{
     private Color one = Color.BLACK;
     private Color two = Color.GREEN;
     private Color three = Color.BLUE;
-    private int depth = 14;
+    private int depth = 13;
     private int stroke = 2;
     private HashMap<Character, String> map;
     private Stack<Integer> xStack = new Stack<>();
@@ -32,28 +31,48 @@ public class LPanel extends JPanel implements ShapeTab{
     private Stack<Integer> dStack = new Stack<>();
     private boolean cycling = false;
     private ArrayList<Action> actionList = new ArrayList<>();
+    private JPanel top = new JPanel();
+    private GridBagConstraints topC = new GridBagConstraints();
+    private JPanel bottom = new JPanel();
+    private GridBagConstraints bottomC = new GridBagConstraints();
 
     LPanel(Largest largest){
         super();
         this.largest = largest;
-        setLayout(new GridBagLayout());
-        setBackground(Largest.BACKGROUND);
+        initPanels();
         initImage();
         updateFields();
         redraw();
     }
 
+    private void initPanels(){
+        setLayout(new GridBagLayout());
+        setBackground(Largest.BACKGROUND);
+        top.setLayout(new GridBagLayout());
+        top.setBackground(Largest.BACKGROUND);
+        bottom.setLayout(new GridBagLayout());
+        bottom.setBackground(Largest.BACKGROUND);
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 0;
+        c.gridy = 1;
+        c.weightx = 1.0;
+        c.weighty = 0.1;
+        add(bottom, c);
+        c.gridy = 0;
+        c.weighty = 0.9;
+        add(top, c);
+    }
+
     private void updateFields(){
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.anchor = GridBagConstraints.WEST;
-        c.insets = new Insets(1, 1, 1, 1);
-        c.gridwidth = 1;
-        c.gridheight = 1;
-        c.weightx = 0.4;
-        c.weighty = 0.2;
-        removeAll();
+        top.removeAll();
+        bottom.removeAll();
         actionList.clear();
+
+        topC.insets = new Insets(1, 1, 1, 1);
         addWarning();
+        topC.fill = GridBagConstraints.HORIZONTAL;
         addReps();
         addAxiom();
         addF();
@@ -67,30 +86,42 @@ public class LPanel extends JPanel implements ShapeTab{
         addTwo();
         addThree();
         addStroke();
+        addResolution();
+
+        bottomC.fill = GridBagConstraints.HORIZONTAL;
+        bottomC.insets = new Insets(1, 1, 1, 1);
+        bottomC.gridwidth = 1;
+        bottomC.gridheight = 1;
+        bottomC.weightx = 0.4;
         addStampify();
         addRandom();
-        addResolution();
         addDraw();
         addSpacers();
+
+//        for(Component com : this.getComponents()){
+//            System.out.println(com.getClass());
+//        }
+//        System.out.println();
     }
 
-    private JLabel getLabel(String s, int y){
+    private void getLabel(String s, int y){
         JLabel label = new JLabel(s);
         label.setBackground(Largest.BACKGROUND);
         label.setForeground(Color.WHITE);
         label.setHorizontalAlignment(JLabel.RIGHT);
 
-        c.gridx = 0;
-        c.gridy = y;
-        add(label, c);
-        return label;
+        topC.gridx = 0;
+        topC.gridy = y;
+        topC.weightx = 0.1;
+        top.add(label, topC);
     }
 
     private JTextField getField(String s, int y){
         JTextField field = new JTextField(s);
-        c.gridx = 2;
-        c.gridy = y;
-        add(field, c);
+        topC.gridx = 2;
+        topC.gridy = y;
+        topC.weightx = 0.7;
+        top.add(field, topC);
         return field;
     }
 
@@ -258,10 +289,10 @@ public class LPanel extends JPanel implements ShapeTab{
     }
 
     private void addThree(){
-        JPanel cPanel = new JPanel();
-        cPanel.setBackground(three);
+        getLabel("Color 3", 12);
 
-        JButton cButton = new JButton("Color 3");
+        JButton cButton = new JButton();
+        cButton.setBackground(three);
         cButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -269,24 +300,20 @@ public class LPanel extends JPanel implements ShapeTab{
                         LPanel.this, "", null);
                 if (newColor != null){
                     three = newColor;
-                    cPanel.setBackground(newColor);
+                    cButton.setBackground(three);
                     redraw();
                 }
             }
         });
 
-        c.gridx = 0;
-        c.gridy = 12;
-        this.add(cButton, c);
-        c.gridx = 2;
-        this.add(cPanel, c);
+        addColorB(cButton, 12);
     }
 
     private void addTwo(){
-        JPanel cPanel = new JPanel();
-        cPanel.setBackground(two);
+        getLabel("Color 2", 11);
 
-        JButton cButton = new JButton("Color 2");
+        JButton cButton = new JButton();
+        cButton.setBackground(two);
         cButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -294,24 +321,20 @@ public class LPanel extends JPanel implements ShapeTab{
                         LPanel.this, "", null);
                 if (newColor != null){
                     two = newColor;
-                    cPanel.setBackground(newColor);
+                    cButton.setBackground(two);
                     redraw();
                 }
             }
         });
 
-        c.gridx = 0;
-        c.gridy = 11;
-        this.add(cButton, c);
-        c.gridx = 2;
-        this.add(cPanel, c);
+        addColorB(cButton, 11);
     }
 
     private void addOne(){
-        JPanel cPanel = new JPanel();
-        cPanel.setBackground(one);
+        getLabel("Color 1", 10);
 
-        JButton cButton = new JButton("Color 1");
+        JButton cButton = new JButton();
+        cButton.setBackground(one);
         cButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -319,17 +342,20 @@ public class LPanel extends JPanel implements ShapeTab{
                         LPanel.this, "", null);
                 if (newColor != null){
                     one = newColor;
-                    cPanel.setBackground(newColor);
+                    cButton.setBackground(one);
                     redraw();
                 }
             }
         });
 
-        c.gridx = 0;
-        c.gridy = 10;
-        this.add(cButton, c);
-        c.gridx = 2;
-        this.add(cPanel, c);
+        addColorB(cButton, 10);
+    }
+
+    private void addColorB(JButton cb, int y){
+        topC.gridx = 2;
+        topC.gridy = y;
+        topC.weightx = 0.6;
+        top.add(cb, topC);
     }
 
     private void addDraw(){
@@ -356,10 +382,9 @@ public class LPanel extends JPanel implements ShapeTab{
         }
         draw.addActionListener(a);
 
-        c.gridy = 15;
-        c.gridx = 2;
-        add(draw, c);
-
+        bottomC.gridx = 2;
+        bottomC.gridy = 0;
+        bottom.add(draw, bottomC);
     }
 
     private void addStroke(){
@@ -495,26 +520,38 @@ public class LPanel extends JPanel implements ShapeTab{
     private void addSpacers() {
         JLabel x1 = new JLabel();
         x1.setBackground(Largest.BACKGROUND);
-        c.gridx = 1;
-        c.gridy = 1;
-        c.gridheight = 16;
-        c.weightx = 0.2;
-        c.weighty = 1.0;
-        c.fill = GridBagConstraints.BOTH;
-        this.add(x1, c);
+        topC.gridx = 1;
+        topC.gridy = 1;
+        topC.gridheight = 16;
+        topC.gridwidth = 1;
+        topC.weightx = 0.2;
+        topC.weighty = 1.0;
+        topC.fill = GridBagConstraints.BOTH;
+        top.add(x1, topC);
+
+        JLabel x2 = new JLabel();
+        x2.setBackground(Largest.BACKGROUND);
+        bottomC.gridx = 1;
+        bottomC.gridy = 1;
+        bottomC.gridheight = 2;
+        bottomC.gridwidth = 1;
+        bottomC.weightx = 0.2;
+        bottomC.weighty = 1.0;
+        bottomC.fill = GridBagConstraints.BOTH;
+        bottom.add(x2, bottomC);
     }
 
     private void addWarning(){
-        c.gridx = 0;
-        c.gridy = 0;
-        c.gridwidth = 3;
-        c.weighty = 1.0;
+        topC.gridx = 0;
+        topC.gridy = 0;
+        topC.gridwidth = 3;
+        topC.gridheight = 1;
+        topC.weighty = 1.0;
         warning.setBackground(Largest.BACKGROUND);
         warning.setForeground(Largest.BACKGROUND);
         warning.setText("filler");
-        this.add(warning, c);
-        c.gridwidth = 1;
-        c.weighty = 0.2;
+        top.add(warning, topC);
+        topC.gridwidth = 1;
     }
 
     private void setWarningText(String text){
@@ -542,9 +579,9 @@ public class LPanel extends JPanel implements ShapeTab{
                 largest.stampify(image);
             }
         });
-        c.gridx = 0;
-        c.gridy = 16;
-        add(stampify, c);
+        bottomC.gridx = 0;
+        bottomC.gridy = 1;
+        bottom.add(stampify, bottomC);
     }
 
     private void addRandom(){
@@ -555,9 +592,9 @@ public class LPanel extends JPanel implements ShapeTab{
                 randomize();
             }
         });
-        c.gridx = 2;
-        c.gridy = 16;
-        add(r, c);
+        bottomC.gridx = 2;
+        bottomC.gridy = 1;
+        bottom.add(r, bottomC);
     }
 
     private void randomize(){
@@ -657,12 +694,13 @@ public class LPanel extends JPanel implements ShapeTab{
         int xStart = (xRes/2) - xCenter;
         int yStart = (yRes/2) - yCenter;
         int[] turtle = new int[]{xStart, yStart, -90};
+        //something is wrong here, doesn't center properly
         //System.out.println(Arrays.toString(turtle) + " " + scale);
         Graphics2D g = (Graphics2D) image.getGraphics();
         g.setStroke(new BasicStroke(stroke));
         g.setColor(one);
         for(char c : axiom.toCharArray()){
-            draw(0, c, turtle, true, scale*0.95, g);
+            draw(0, c, turtle, true, scale*0.93, g);
         }
         g.dispose();
         largest.reset();

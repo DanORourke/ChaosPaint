@@ -474,7 +474,7 @@ public class ChaosPanel extends JPanel implements ShapeTab{
             }
 
             for(Integer gap : past.get(1)){
-                if (gap != -1 && (id + gap)%size == p1){
+                if (gap != -1 && (id + gap)%size == p2){
                     if (past.get(2).contains(-1) && p2 == p3){
                         return false;
                     }else if (!past.get(2).contains(-1)){
@@ -483,8 +483,8 @@ public class ChaosPanel extends JPanel implements ShapeTab{
                 }
             }
 
-            for(Integer gap : past.get(1)){
-                if (gap != -1 && gap != -2 && (id + gap)%size == p1){
+            for(Integer gap : past.get(2)){
+                if (gap >= 0 && (id + gap)%size == p3){
                     return false;
                 }
             }
