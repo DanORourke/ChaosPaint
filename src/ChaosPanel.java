@@ -14,7 +14,8 @@ public class ChaosPanel extends JPanel implements ShapeTab{
     private double gravity = 0.5;
     private int vertexSize = 10;
     private int pointSize = 2;
-    private boolean showVertex = true;
+    private boolean showVertex = false;
+    private boolean blend = false;
     private ArrayList<HashSet<Integer>> past = new ArrayList<>();
     private LinkedList<Integer> link = new LinkedList<>();
     private ArrayList<Integer> colorList = new ArrayList<>();
@@ -60,6 +61,7 @@ public class ChaosPanel extends JPanel implements ShapeTab{
         addVSize();
         addPSize();
         addShow();
+        addBlend();
         setColor();
         addStampify();
         addRandom();
@@ -131,8 +133,14 @@ public class ChaosPanel extends JPanel implements ShapeTab{
             return;
         }
 
-        int min = index*-1;
+        int min = 0;
         int max = size - 1;
+        if(index > 0){
+            min = size * -1;
+        }
+        if(index == 2){
+            min *= 2;
+        }
         String[] arr = input.trim().split("\\s*,\\s*");
         for(String s : arr){
             try {
@@ -195,6 +203,25 @@ public class ChaosPanel extends JPanel implements ShapeTab{
         add(gBtn, c);
         c.gridx = 2;
         add(gField, c);
+    }
+
+    private void addBlend(){
+        JCheckBox showCheck = new JCheckBox("Blend");
+        showCheck.setSelected(blend);
+        showCheck.setBackground(Largest.BACKGROUND);
+        showCheck.setForeground(Color.WHITE);
+
+        showCheck.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                blend = showCheck.isSelected();
+                redraw();
+            }
+        });
+
+        c.gridx = 2;
+        c.gridy = 9;
+        add(showCheck, c);
     }
 
     private void addShow(){
@@ -335,7 +362,6 @@ public class ChaosPanel extends JPanel implements ShapeTab{
         while(colorList.size() > size){
             colorList.remove(colorList.size()-1);
         }
-
     }
 
     private void fixPast(){
@@ -440,17 +466,78 @@ public class ChaosPanel extends JPanel implements ShapeTab{
         int nc = Stamp.blend(point[2], next.getC(), gravity);
 
         if (draw){
-            g.setColor(new Color(nc));
+            if(blend){
+                for(int x = nx - pointSize + 1; x < nx + pointSize; x++){
+                    for(int y = ny - pointSize + 1; y < ny + pointSize; y++){
+                        if(x < 0 || y < 0 || x >= xRes || y >= yRes){
+                            continue;
+                        }
+                        int oldc = image.getRGB(x, y);
+                        if((oldc >> 24 & 0xff) == 0){
+                            image.setRGB(x, y, nc);
+                        }else{
+                            image.setRGB(x, y, Stamp.blend(nc, oldc, 0.5));
+                        }
+                    }
+                }
+
+            }else{
+                g.setColor(new Color(nc));
 //            float alpha  = 0.5f;
 //            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_IN, alpha));
-            g.drawOval(nx - pointSize /2, ny - pointSize /2, pointSize, pointSize);
-            g.fillOval(nx - pointSize /2, ny - pointSize /2, pointSize, pointSize);
+                g.drawOval(nx - pointSize /2, ny - pointSize /2, pointSize, pointSize);
+                g.fillOval(nx - pointSize /2, ny - pointSize /2, pointSize, pointSize);
 //            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OUT));
 //            g.drawOval(nx - pointSize/2, ny - pointSize/2, pointSize, pointSize);
 //            g.fillOval(nx - pointSize/2, ny - pointSize/2, pointSize, pointSize);
+            }
         }
         return new int[]{nx, ny, nc};
     }
+
+//    private boolean canChoose(Vertex v){
+//        int id = v.getId();
+//
+//        if (link.size() == 3){
+//            int p1 = link.get(0);
+//            int p2 = link.get(1);
+//            int p3 = link.get(2);
+//
+//            for(Integer gap : past.get(0)){
+//                if ((id + gap)%size == p1){
+//                    if (past.get(1).contains(-1) && p1 == p2){
+//                        return false;
+//                    }else if (past.get(2).contains(-2) && p1 == p3){
+//                        return false;
+//                    }else if (!past.get(1).contains(-1) && !past.get(2).contains(-2)){
+//                        return false;
+//                    }
+//
+//                }
+//            }
+//
+//            for(Integer gap : past.get(1)){
+//                if (gap != -1 && (id + gap)%size == p2){
+//                    if (past.get(2).contains(-1) && p2 == p3){
+//                        return false;
+//                    }else if (!past.get(2).contains(-1)){
+//                        return false;
+//                    }
+//                }
+//            }
+//
+//            for(Integer gap : past.get(2)){
+//                if (gap >= 0 && (id + gap)%size == p3){
+//                    return false;
+//                }
+//            }
+//
+//            link.removeLast();
+//        }
+//        link.addFirst(id);
+//
+//        return true;
+//    }
 
     private boolean canChoose(Vertex v){
         int id = v.getId();
@@ -462,22 +549,16 @@ public class ChaosPanel extends JPanel implements ShapeTab{
 
             for(Integer gap : past.get(0)){
                 if ((id + gap)%size == p1){
-                    if (past.get(1).contains(-1) && p1 == p2){
-                        return false;
-                    }else if (past.get(2).contains(-2) && p1 == p3){
-                        return false;
-                    }else if (!past.get(1).contains(-1) && !past.get(2).contains(-2)){
-                        return false;
-                    }
-
+                    return false;
                 }
             }
 
             for(Integer gap : past.get(1)){
-                if (gap != -1 && (id + gap)%size == p2){
-                    if (past.get(2).contains(-1) && p2 == p3){
-                        return false;
-                    }else if (!past.get(2).contains(-1)){
+                if (gap >= 0 && (id + gap)%size == p2){
+                    return false;
+                }else{
+                    int ng = gap * -1;
+                    if((id + ng)%size == p2 && p1 == p2){
                         return false;
                     }
                 }
@@ -486,9 +567,19 @@ public class ChaosPanel extends JPanel implements ShapeTab{
             for(Integer gap : past.get(2)){
                 if (gap >= 0 && (id + gap)%size == p3){
                     return false;
+                }else if (gap < 0 && gap >= (size*-1)){
+                    int ng = gap * -1;
+                    if((id + ng)%size == p3 && p2 == p3){
+                        return false;
+                    }
+                }else{
+                    int ng = (gap  * -1) - size;
+                    if((id + ng)%size == p3 && p1 == p3){
+                        return false;
+                    }
                 }
-            }
 
+            }
             link.removeLast();
         }
         link.addFirst(id);
@@ -498,16 +589,14 @@ public class ChaosPanel extends JPanel implements ShapeTab{
 
     private void initPast(){
         HashSet<Integer> p1 = new HashSet<>();
-        p1.add(1);
-        p1.add(4);
         past.add(p1);
         HashSet<Integer> p2 = new HashSet<>();
         p2.add(-1);
-//        p2.add(3);
+        p2.add(-4);
         past.add(p2);
         HashSet<Integer> p3 = new HashSet<>();
-        p3.add(-2);
-//        p3.add(3);
+        p3.add(-6);
+        p3.add(-9);
         past.add(p3);
     }
 
@@ -651,19 +740,40 @@ public class ChaosPanel extends JPanel implements ShapeTab{
     private void randomize(){
         Random r = new Random();
         double chance = 0.2;
-        size = r.nextInt(10) + 3;
+//        size = r.nextInt(10) + 3;
         //avoid too low cause they are mostly just blobs in the middle, but higher can be good
-        gravity = 0.5 + ((r.nextDouble() - 0.25)*0.4);
-        colorList.clear();
-        colorList.add(Color.BLUE.getRGB());
-        colorList.add(Color.RED.getRGB());
+//        gravity = 0.5 + ((r.nextDouble() - 0.25)*0.4);
+        while(colorList.size() > size){
+            colorList.remove(colorList.size() - 1);
+        }
+//        colorList.clear();
+//        colorList.add(Color.BLUE.getRGB());
+//        colorList.add(Color.RED.getRGB());
         initColorMap();
         imagePanel.setImage(getPanelImage());
 
+//        for(int i = 0; i < 3; i++){
+//            HashSet<Integer>  p = past.get(i);
+//            p.clear();
+//            for(int j = 0 - i; j < size; j++){
+//                if(r.nextDouble() < chance){
+//                    p.add(j);
+//                }
+//            }
+//        }
         for(int i = 0; i < 3; i++){
             HashSet<Integer>  p = past.get(i);
             p.clear();
-            for(int j = 0 - i; j < size; j++){
+            int min = 0;
+            if(i > 0){
+                min = size * -1;
+                chance *= 0.5;
+            }
+            if(i == 2){
+                min *= 2;
+                chance *= 0.75;
+            }
+            for(int j = min; j < size; j++){
                 if(r.nextDouble() < chance){
                     p.add(j);
                 }

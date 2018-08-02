@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 public class StampPanel extends JPanel implements ShapeTab{
     private final Largest largest;
@@ -12,6 +13,10 @@ public class StampPanel extends JPanel implements ShapeTab{
     private int xRes;
     private int yRes;
     private BufferedImage image;
+    private int left = 0;
+    private int right = 0;
+    private boolean cycling = false;
+    private ArrayList<Action> actionList = new ArrayList<>();
 
     StampPanel(Largest largest){
         super();
@@ -21,10 +26,6 @@ public class StampPanel extends JPanel implements ShapeTab{
         initImage();
         c.insets = new Insets(1, 1, 1, 1);
         c.fill = GridBagConstraints.BOTH;
-        c.weightx = 0.4;
-        c.weighty = 0.4;
-        c.gridwidth = 1;
-        c.gridheight = 1;
         updateFields();
     }
 
@@ -60,14 +61,26 @@ public class StampPanel extends JPanel implements ShapeTab{
         addDeltaTheta2();
         addSpinRate2();
         addScale2();
-        addHowAdd();
         addUse();
+        addHowAdd();
         addRemoveAlpha();
         addFillAlpha();
         addChangeColor();
         addHowChangeColor();
         addStampify();
         addSpacers();
+    }
+
+    private void addLeft(Component com){
+        c.gridx = 0;
+        c.gridy = left++;
+        add(com, c);
+    }
+
+    private void addRight(Component com){
+        c.gridx = 2;
+        c.gridy = right++;
+        add(com, c);
     }
 
     @Override
@@ -79,8 +92,10 @@ public class StampPanel extends JPanel implements ShapeTab{
 
     private void addRemoveAlpha(){
         JTextField howField = new JTextField(String.valueOf(stamp.getMinAlpha()));
-        JButton how = new JButton("Remove Alpha <");
-        how.addActionListener(new ActionListener() {
+        addRight(howField);
+        JButton how = new JButton("Remove Alpha <=");
+        addLeft(how);
+        Action ha = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -96,19 +111,18 @@ public class StampPanel extends JPanel implements ShapeTab{
                 }
                 howField.setText(String.valueOf(stamp.getMinAlpha()));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 16;
-        this.add(how, c);
-        c.gridx = 2;
-        this.add(howField, c);
+        };
+        howField.addActionListener(ha);
+        how.addActionListener(ha);
+        actionList.add(ha);
     }
 
     private void addFillAlpha(){
         JTextField howField = new JTextField(String.valueOf(stamp.getFillAlpha()));
+        addRight(howField);
         JButton how = new JButton("Fill Alpha >=");
-        how.addActionListener(new ActionListener() {
+        addLeft(how);
+        Action ha = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -124,21 +138,20 @@ public class StampPanel extends JPanel implements ShapeTab{
                 }
                 howField.setText(String.valueOf(stamp.getFillAlpha()));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 17;
-        this.add(how, c);
-        c.gridx = 2;
-        this.add(howField, c);
+        };
+        howField.addActionListener(ha);
+        how.addActionListener(ha);
+        actionList.add(ha);
     }
 
     private void addChangeColor(){
-        JPanel cPanel = new JPanel();
+        JButton colB = new JButton();
+        addRight(colB);
         Color col = new Color(stamp.getDeltaColor());
-        cPanel.setBackground(col);
+        colB.setBackground(col);
         JButton cButton = new JButton("Change Color");
-        cButton.addActionListener(new ActionListener() {
+        addLeft(cButton);
+        Action ca = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Color newColor = JColorChooser.showDialog(
@@ -146,23 +159,21 @@ public class StampPanel extends JPanel implements ShapeTab{
                 if (newColor != null){
                     int nc = newColor.getRGB();
                     stamp.setDeltaColor(nc);
-                    cPanel.setBackground(newColor);
+                    colB.setBackground(newColor);
                     afterChange();
                 }
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 18;
-        this.add(cButton, c);
-        c.gridx = 2;
-        this.add(cPanel, c);
+        };
+        colB.addActionListener(ca);
+        cButton.addActionListener(ca);
     }
 
     private void addHowChangeColor(){
         JTextField hccField = new JTextField(String.valueOf(stamp.getHowDeltaColor()));
+        addRight(hccField);
         JButton hcc = new JButton("Old Color %");
-        hcc.addActionListener(new ActionListener() {
+        addLeft(hcc);
+        Action ha = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -178,17 +189,15 @@ public class StampPanel extends JPanel implements ShapeTab{
                 }
                 hccField.setText(String.valueOf(stamp.getHowDeltaColor()));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 19;
-        this.add(hcc, c);
-        c.gridx = 2;
-        this.add(hccField, c);
+        };
+        hccField.addActionListener(ha);
+        hcc.addActionListener(ha);
+        actionList.add(ha);
     }
 
     private void addStampify(){
         JButton ts = new JButton("Stampify");
+        addLeft(ts);
         ts.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -196,80 +205,31 @@ public class StampPanel extends JPanel implements ShapeTab{
                 reset();
             }
         });
-        c.gridx = 0;
-        c.gridy = 20;
-        this.add(ts, c);
+
+        JButton db = new JButton("Redraw");
+        addRight(db);
+        db.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cycling = true;
+                for(ActionListener a : actionList){
+                    a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {
+                        //Nothing need go here, the actionPerformed method (with the
+                        //above arguments) will trigger the respective listener
+                    });
+                }
+                cycling = false;
+                afterChange();
+            }
+        });
     }
 
     private void addDimensions() {
         JTextField widthField = new JTextField(String.valueOf(stamp.getWidth()));
-        JButton width = createWidthB(widthField);
-        JTextField heightField = new JTextField(String.valueOf(stamp.getHeight()));
-        JButton height = createHeightB(heightField);
-
-        c.gridx = 0;
-        c.gridy = 1;
-        this.add(width, c);
-        c.gridy = 2;
-        this.add(height, c);
-        c.gridx = 2;
-        c.gridy = 1;
-        this.add(widthField, c);
-        c.gridy = 2;
-        this.add(heightField, c);
-    }
-
-    private void addHowAdd() {
-        JTextField howField = new JTextField(String.valueOf(stamp.getHowAdd()));
-        JButton how = new JButton("How to Stamp");
-        how.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    double h = Double.parseDouble(howField.getText());
-                    stamp.setHowAdd(h);
-                    afterChange();
-                }catch (NumberFormatException e1){
-                    setWarningText("0 <= double <= 1");
-                }
-                howField.setText(String.valueOf(stamp.getHowAdd()));
-            }
-        });
-
-        c.gridx = 0;
-        c.gridy = 15;
-        this.add(how, c);
-        c.gridx = 2;
-        this.add(howField, c);
-    }
-
-    private JButton createHeightB(JTextField heightField) {
-        JButton height = new JButton("Set Height");
-        height.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    int h = Integer.parseInt(heightField.getText());
-                    stamp.setHeight(h);
-                    afterChange();
-                }catch (NumberFormatException e1){
-                    setWarningText("Input an integer");
-                }
-                heightField.setText(String.valueOf(stamp.getHeight()));
-            }
-        });
-        return height;
-    }
-
-    private void afterChange(){
-        image = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
-        stamp.spanelStamp(image);
-        largest.reset();
-    }
-
-    private JButton createWidthB(JTextField widthField) {
+        addRight(widthField);
         JButton width = new JButton("Set Width");
-        width.addActionListener(new ActionListener() {
+        addLeft(width);
+        Action wa = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -281,8 +241,62 @@ public class StampPanel extends JPanel implements ShapeTab{
                 }
                 widthField.setText(String.valueOf(stamp.getWidth()));
             }
-        });
-        return width;
+        };
+        widthField.addActionListener(wa);
+        width.addActionListener(wa);
+        actionList.add(wa);
+
+        JTextField heightField = new JTextField(String.valueOf(stamp.getHeight()));
+        addRight(heightField);
+        JButton height = new JButton("Set Height");
+        addLeft(height);
+        Action ha = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int h = Integer.parseInt(heightField.getText());
+                    stamp.setHeight(h);
+                    afterChange();
+                }catch (NumberFormatException e1){
+                    setWarningText("Input an integer");
+                }
+                heightField.setText(String.valueOf(stamp.getHeight()));
+            }
+        };
+        heightField.addActionListener(ha);
+        height.addActionListener(ha);
+        actionList.add(ha);
+    }
+
+    private void addHowAdd() {
+        JTextField howField = new JTextField(String.valueOf(stamp.getHowAdd()));
+        addRight(howField);
+        JButton how = new JButton("How to Stamp");
+        addLeft(how);
+        Action ha = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    double h = Double.parseDouble(howField.getText());
+                    stamp.setHowAdd(h);
+                    afterChange();
+                }catch (NumberFormatException e1){
+                    setWarningText("0 <= double <= 1");
+                }
+                howField.setText(String.valueOf(stamp.getHowAdd()));
+            }
+        };
+        howField.addActionListener(ha);
+        how.addActionListener(ha);
+        actionList.add(ha);
+    }
+
+    private void afterChange(){
+        if(!cycling){
+            image = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
+            stamp.spanelStamp(image);
+            largest.reset();
+        }
     }
 
     private void addSpacers() {
@@ -314,7 +328,8 @@ public class StampPanel extends JPanel implements ShapeTab{
 
     private void addWarning(){
         c.gridx = 0;
-        c.gridy = 0;
+        c.gridy = left++;
+        right++;
         c.gridwidth = 3;
         warning.setBackground(Largest.BACKGROUND);
         warning.setForeground(Largest.BACKGROUND);
@@ -376,20 +391,18 @@ public class StampPanel extends JPanel implements ShapeTab{
             }
         });
 
-        c.gridx = 0;
-        c.gridy = 13;
-        this.add(xcheck, c);
-        c.gridx = 2;
-        this.add(ycheck, c);
-        c.gridx = 0;
-        c.gridy = 14;
-        this.add(leafCheck, c);
+        addLeft(xcheck);
+        addLeft(leafCheck);
+        addRight(ycheck);
+        right++;
     }
 
     private void addScale1(){
         JTextField scaleField = new JTextField(String.valueOf(stamp.getScale1()));
+        addRight(scaleField);
         JButton scale = new JButton("Scale 1");
-        scale.addActionListener(new ActionListener() {
+        addLeft(scale);
+        Action sa = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -405,19 +418,18 @@ public class StampPanel extends JPanel implements ShapeTab{
                 }
                 scaleField.setText(String.valueOf(stamp.getScale1()));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 8;
-        this.add(scale, c);
-        c.gridx = 2;
-        this.add(scaleField, c);
+        };
+        scaleField.addActionListener(sa);
+        scale.addActionListener(sa);
+        actionList.add(sa);
     }
 
     private void addScale2(){
         JTextField scaleField = new JTextField(String.valueOf(stamp.getScale2()));
+        addRight(scaleField);
         JButton scale = new JButton("Scale 2");
-        scale.addActionListener(new ActionListener() {
+        addLeft(scale);
+        Action sa = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -433,19 +445,18 @@ public class StampPanel extends JPanel implements ShapeTab{
                 }
                 scaleField.setText(String.valueOf(stamp.getScale2()));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 12;
-        this.add(scale, c);
-        c.gridx = 2;
-        this.add(scaleField, c);
+        };
+        scaleField.addActionListener(sa);
+        scale.addActionListener(sa);
+        actionList.add(sa);
     }
 
     private void addSpinRate1(){
         JTextField spinField = new JTextField(String.valueOf(stamp.getSpinRate1()));
+        addRight(spinField);
         JButton spin = new JButton("Spin 1");
-        spin.addActionListener(new ActionListener() {
+        addLeft(spin);
+        Action sa = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -457,19 +468,18 @@ public class StampPanel extends JPanel implements ShapeTab{
                 }
                 spinField.setText(String.valueOf(stamp.getSpinRate1()));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 7;
-        this.add(spin, c);
-        c.gridx = 2;
-        this.add(spinField, c);
+        };
+        spinField.addActionListener(sa);
+        spin.addActionListener(sa);
+        actionList.add(sa);
     }
 
     private void addSpinRate2(){
         JTextField spinField = new JTextField(String.valueOf(stamp.getSpinRate2()));
+        addRight(spinField);
         JButton spin = new JButton("Spin 2");
-        spin.addActionListener(new ActionListener() {
+        addLeft(spin);
+        Action sa = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -481,19 +491,18 @@ public class StampPanel extends JPanel implements ShapeTab{
                 }
                 spinField.setText(String.valueOf(stamp.getSpinRate2()));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 11;
-        this.add(spin, c);
-        c.gridx = 2;
-        this.add(spinField, c);
+        };
+        spinField.addActionListener(sa);
+        spin.addActionListener(sa);
+        actionList.add(sa);
     }
 
     private void addDeltaTheta1(){
         JTextField deltaField = new JTextField(String.valueOf(stamp.getDeltaDirection1()));
+        addRight(deltaField);
         JButton delta = new JButton("Angle 1");
-        delta.addActionListener(new ActionListener() {
+        addLeft(delta);
+        Action da = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -505,19 +514,18 @@ public class StampPanel extends JPanel implements ShapeTab{
                 }
                 deltaField.setText(String.valueOf(stamp.getDeltaDirection1()));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 6;
-        this.add(delta, c);
-        c.gridx = 2;
-        this.add(deltaField, c);
+        };
+        deltaField.addActionListener(da);
+        delta.addActionListener(da);
+        actionList.add(da);
     }
 
     private void addDeltaTheta2(){
         JTextField deltaField = new JTextField(String.valueOf(stamp.getDeltaDirection2()));
+        addRight(deltaField);
         JButton delta = new JButton("Angle 2");
-        delta.addActionListener(new ActionListener() {
+        addLeft(delta);
+        Action da = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -529,19 +537,18 @@ public class StampPanel extends JPanel implements ShapeTab{
                 }
                 deltaField.setText(String.valueOf(stamp.getDeltaDirection2()));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 10;
-        this.add(delta, c);
-        c.gridx = 2;
-        this.add(deltaField, c);
+        };
+        deltaField.addActionListener(da);
+        delta.addActionListener(da);
+        actionList.add(da);
     }
 
     private void addDistance1(){
         JTextField distanceField = new JTextField(String.valueOf(stamp.getDistance1()));
+        addRight(distanceField);
         JButton distance = new JButton("Distance 1");
-        distance.addActionListener(new ActionListener() {
+        addLeft(distance);
+        Action da = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -553,19 +560,18 @@ public class StampPanel extends JPanel implements ShapeTab{
                 }
                 distanceField.setText(String.valueOf(stamp.getDistance1()));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 5;
-        this.add(distance, c);
-        c.gridx = 2;
-        this.add(distanceField, c);
+        };
+        distanceField.addActionListener(da);
+        distance.addActionListener(da);
+        actionList.add(da);
     }
 
     private void addDistance2(){
         JTextField distanceField = new JTextField(String.valueOf(stamp.getDistance2()));
+        addRight(distanceField);
         JButton distance = new JButton("Distance 2");
-        distance.addActionListener(new ActionListener() {
+        addLeft(distance);
+        Action da = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -577,19 +583,18 @@ public class StampPanel extends JPanel implements ShapeTab{
                 }
                 distanceField.setText(String.valueOf(stamp.getDistance2()));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 9;
-        this.add(distance, c);
-        c.gridx = 2;
-        this.add(distanceField, c);
+        };
+        distanceField.addActionListener(da);
+        distance.addActionListener(da);
+        actionList.add(da);
     }
 
     private void addStartTheta(){
         JTextField startField = new JTextField(String.valueOf(stamp.getStartingDirection()));
+        addRight(startField);
         JButton start = new JButton("Initial Angle");
-        start.addActionListener(new ActionListener() {
+        addLeft(start);
+        Action sa = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -601,19 +606,18 @@ public class StampPanel extends JPanel implements ShapeTab{
                 }
                 startField.setText(String.valueOf(stamp.getStartingDirection()));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 4;
-        this.add(start, c);
-        c.gridx = 2;
-        this.add(startField, c);
+        };
+        startField.addActionListener(sa);
+        start.addActionListener(sa);
+        actionList.add(sa);
     }
 
     private void addReps(){
         JTextField repField = new JTextField(String.valueOf(stamp.getReps()));
-        JButton how = new JButton("Repetitions");
-        how.addActionListener(new ActionListener() {
+        addRight(repField);
+        JButton rb = new JButton("Repetitions");
+        addLeft(rb);
+        Action ra = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -625,13 +629,10 @@ public class StampPanel extends JPanel implements ShapeTab{
                 }
                 repField.setText(String.valueOf(stamp.getReps()));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 3;
-        this.add(how, c);
-        c.gridx = 2;
-        this.add(repField, c);
+        };
+        repField.addActionListener(ra);
+        rb.addActionListener(ra);
+        actionList.add(ra);
     }
 
     @Override

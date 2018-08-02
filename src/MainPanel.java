@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
+import java.util.ArrayList;
 
 public class MainPanel extends JPanel implements ShapeTab{
     private final Largest largest;
@@ -25,6 +26,10 @@ public class MainPanel extends JPanel implements ShapeTab{
     private JTextField xOff;
     private JTextField yOff;
     private JTextField rotation;
+    private int left = 0;
+    private int right = 0;
+    private boolean cycling = false;
+    private ArrayList<Action> actionList = new ArrayList<>();
 
     MainPanel(Largest largest){
         this.largest = largest;
@@ -40,14 +45,19 @@ public class MainPanel extends JPanel implements ShapeTab{
         c.weighty = 0.4;
         c.gridwidth = 1;
         c.gridheight = 1;
+        left = 0;
+        right = 0;
         removeAll();
+        addWarning();
         addOffsets();
         addNudges();
         addDimensions();
-        addFlip();
         addShear();
         addRotate();
+        addRNudges();
         addHowAdd();
+        addFlip();
+        addFinalize();
         addOver();
         addStampFinal();
         addStampifyTemp();
@@ -58,8 +68,19 @@ public class MainPanel extends JPanel implements ShapeTab{
         addFile();
         addResolution();
         addSpacers();
-        addWarning();
         setFocus();
+    }
+
+    private void addLeft(Component com){
+        c.gridx = 0;
+        c.gridy = left++;
+        add(com, c);
+    }
+
+    private void addRight(Component com){
+        c.gridx = 2;
+        c.gridy = right++;
+        add(com, c);
     }
 
     private void setFocus(){
@@ -79,7 +100,7 @@ public class MainPanel extends JPanel implements ShapeTab{
     private void addResolution(){
         JTextField resField = new JTextField(String.valueOf(xRes));
         JButton resBtn = new JButton("Resolution");
-        resBtn.addActionListener(new ActionListener() {
+        Action ra  = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -102,10 +123,13 @@ public class MainPanel extends JPanel implements ShapeTab{
                 }
                 resField.setText(String.valueOf(xRes));
             }
-        });
+        };
+        resField.addActionListener(ra);
+        resBtn.addActionListener(ra);
+        actionList.add(ra);
 
         c.gridx = 0;
-        c.gridy = 20;
+        c.gridy = 22;
         add(resBtn, c);
         c.gridx = 2;
         add(resField, c);
@@ -115,7 +139,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         JButton save = createSave();
         JButton open = createOpen();
         c.gridx = 0;
-        c.gridy = 19;
+        c.gridy = 21;
         this.add(save, c);
         c.gridx = 2;
         this.add(open, c);
@@ -147,9 +171,9 @@ public class MainPanel extends JPanel implements ShapeTab{
         JButton sFinal = createSFinal();
         JButton cFinal = createCFinal();
         c.gridx = 2;
-        c.gridy = 14;
+        c.gridy = 16;
         this.add(sFinal, c);
-        c.gridy = 18;
+        c.gridy = 20;
         this.add(cFinal, c);
     }
 
@@ -185,9 +209,9 @@ public class MainPanel extends JPanel implements ShapeTab{
         JButton sTemp = createSTemp();
         JButton cTemp = createCTemp();
         c.gridx = 0;
-        c.gridy = 14;
+        c.gridy = 16;
         this.add(sTemp, c);
-        c.gridy = 18;
+        c.gridy = 20;
         this.add(cTemp, c);
     }
 
@@ -224,9 +248,9 @@ public class MainPanel extends JPanel implements ShapeTab{
         JButton tToF = createTToF();
         JButton fToT = createFToT();
         c.gridx = 0;
-        c.gridy = 15;
-        this.add(sToT, c);
         c.gridy = 17;
+        this.add(sToT, c);
+        c.gridy = 19;
         this.add(fToT, c);
         c.gridx = 2;
         this.add(tToF, c);
@@ -290,7 +314,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         });
 
         c.gridx = 0;
-        c.gridy = 16;
+        c.gridy = 18;
         this.add(ts, c);
     }
 
@@ -305,7 +329,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         });
 
         c.gridx = 2;
-        c.gridy = 16;
+        c.gridy = 18;
         this.add(ts, c);
     }
 
@@ -321,7 +345,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         });
 
         c.gridx = 2;
-        c.gridy = 15;
+        c.gridy = 17;
         this.add(sf, c);
     }
 
@@ -360,7 +384,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         });
 
         c.gridx = 0;
-        c.gridy = 13;
+        c.gridy = 15;
         this.add(overTemp, c);
         c.gridx = 2;
         this.add(overFinal, c);
@@ -382,12 +406,47 @@ public class MainPanel extends JPanel implements ShapeTab{
         }
     }
 
+    private void addFinalize(){
+        JButton stampify = new JButton("Stampify Stamp");
+        addLeft(stampify);
+        stampify.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                BufferedImage bi =  new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
+                stamp.mainStamp(bi);
+                largest.stampify(bi);
+                addButtons();
+                revalidate();
+                repaint();
+            }
+        });
+
+        JButton redraw = new JButton("Redraw Stamp");
+        addRight(redraw);
+        redraw.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cycling = true;
+                for(ActionListener a : actionList){
+                    a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {
+                        //Nothing need go here, the actionPerformed method (with the
+                        //above arguments) will trigger the respective listener
+                    });
+                }
+                cycling = false;
+                ifNotCycling();
+            }
+        });
+    }
+
     private void addFlip() {
         JCheckBox xcheck = new JCheckBox("Flip Horizontal");
+        addLeft(xcheck);
         xcheck.setSelected(stamp.isXflip());
         xcheck.setBackground(Largest.BACKGROUND);
         xcheck.setForeground(Color.WHITE);
         JCheckBox ycheck = new JCheckBox("Flip Vertical");
+        addRight(ycheck);
         ycheck.setSelected(stamp.isYflip());
         ycheck.setBackground(Largest.BACKGROUND);
         ycheck.setForeground(Color.WHITE);
@@ -408,80 +467,120 @@ public class MainPanel extends JPanel implements ShapeTab{
                 largest.reset();
             }
         });
-
-        c.gridx = 0;
-        c.gridy = 11;
-        this.add(xcheck, c);
-        c.gridx = 2;
-        this.add(ycheck, c);
     }
 
     private void addHowAdd() {
         JTextField howField = new JTextField(String.valueOf(stamp.getHowAdd()));
+        addRight(howField);
         JButton how = new JButton("How to Stamp");
-        how.addActionListener(new ActionListener() {
+        addLeft(how);
+        Action ha = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
                     double h = Double.parseDouble(howField.getText());
                     stamp.setHowAdd(h);
-                    resetSImage();
-                    largest.reset();
+                    ifNotCycling();
                 }catch (NumberFormatException e1){
                     setWarningText("0 <= double <= 1");
                 }
                 howField.setText(String.valueOf(stamp.getHowAdd()));
             }
+        };
+        howField.addActionListener(ha);
+        how.addActionListener(ha);
+        actionList.add(ha);
+    }
+
+    private void addRNudges(){
+        JButton cb = new JButton("Nudge Clock");
+        addLeft(cb);
+        cb.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                stamp.setRotationDegree(stamp.getRotationDegree() + 2);
+                rotation.setText(String.valueOf(stamp.getRotationDegree()));
+                ifNotCycling();
+            }
         });
 
-        c.gridx = 0;
-        c.gridy = 10;
-        this.add(how, c);
-        c.gridx = 2;
-        this.add(howField, c);
+        JButton ccb = new JButton("Nudge Counter");
+        addRight(ccb);
+        ccb.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                stamp.setRotationDegree(stamp.getRotationDegree() - 2);
+                rotation.setText(String.valueOf(stamp.getRotationDegree()));
+                ifNotCycling();
+            }
+        });
     }
 
     private void addRotate() {
         rotation = new JTextField(String.valueOf(stamp.getRotationDegree()));
+        addRight(rotation);
         JButton theta = new JButton("Rotate");
-        theta.addActionListener(new ActionListener() {
+        addLeft(theta);
+        Action ra = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
                     int t = Integer.parseInt(rotation.getText())%360;
                     stamp.setRotationDegree(t);
-                    resetSImage();
-                    largest.reset();
+                    ifNotCycling();
                 }catch (NumberFormatException e1){
                     setWarningText("Input an integer");
                 }
                 rotation.setText(String.valueOf(stamp.getRotationDegree()));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 9;
-        this.add(theta, c);
-        c.gridx = 2;
-        this.add(rotation, c);
+        };
+        rotation.addActionListener(ra);
+        theta.addActionListener(ra);
+        actionList.add(ra);
     }
 
     private void addShear() {
         JTextField xsField = new JTextField(String.valueOf(stamp.getXshear()));
-        JButton xs = createxShear(xsField);
-        JTextField ysField = new JTextField(String.valueOf(stamp.getYshear()));
-        JButton ys = createyShear(ysField);
+        addRight(xsField);
+        JButton xs = new JButton("Shear X");
+        addLeft(xs);
+        Action xa = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    Double s = Double.parseDouble(xsField.getText());
+                    stamp.setXshear(s);
+                    ifNotCycling();
+                }catch (NumberFormatException e1){
+                    setWarningText("Input a double");
+                }
+                xsField.setText(String.valueOf(stamp.getXshear()));
+            }
+        };
+        xsField.addActionListener(xa);
+        xs.addActionListener(xa);
+        actionList.add(xa);
 
-        c.gridx = 0;
-        c.gridy = 7;
-        this.add(xs, c);
-        c.gridy = 8;
-        this.add(ys, c);
-        c.gridx = 2;
-        c.gridy = 7;
-        this.add(xsField, c);
-        c.gridy = 8;
-        this.add(ysField, c);
+        JTextField ysField = new JTextField(String.valueOf(stamp.getYshear()));
+        addRight(ysField);
+        JButton ys = new JButton("Shear Y");
+        addLeft(ys);
+        Action ya = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    Double s = Double.parseDouble(ysField.getText());
+                    stamp.setYshear(s);
+                    ifNotCycling();
+                }catch (NumberFormatException e1){
+                    setWarningText("Input a double");
+                }
+                ysField.setText(String.valueOf(stamp.getYshear()));
+            }
+        };
+        ysField.addActionListener(ya);
+        ys.addActionListener(ya);
+        actionList.add(ya);
     }
 
     private JButton createyShear(JTextField ysField) {
@@ -492,8 +591,7 @@ public class MainPanel extends JPanel implements ShapeTab{
                 try {
                     Double s = Double.parseDouble(ysField.getText());
                     stamp.setYshear(s);
-                    resetSImage();
-                    largest.reset();
+                    ifNotCycling();
                 }catch (NumberFormatException e1){
                     setWarningText("Input a double");
                 }
@@ -511,8 +609,7 @@ public class MainPanel extends JPanel implements ShapeTab{
                 try {
                     Double s = Double.parseDouble(xsField.getText());
                     stamp.setXshear(s);
-                    resetSImage();
-                    largest.reset();
+                    ifNotCycling();
                 }catch (NumberFormatException e1){
                     setWarningText("Input a double");
                 }
@@ -524,85 +621,69 @@ public class MainPanel extends JPanel implements ShapeTab{
 
     private void addDimensions() {
         JTextField widthField = new JTextField(String.valueOf(stamp.getWidth()));
-        JButton width = createWidthB(widthField);
-        JTextField heightField = new JTextField(String.valueOf(stamp.getHeight()));
-        JButton height = createHeightB(heightField);
-
-        c.gridx = 0;
-        c.gridy = 5;
-        this.add(width, c);
-        c.gridy = 6;
-        this.add(height, c);
-        c.gridx = 2;
-        c.gridy = 5;
-        this.add(widthField, c);
-        c.gridy = 6;
-        this.add(heightField, c);
-    }
-
-    private JButton createHeightB(JTextField heightField) {
-        JButton height = new JButton("Set Height");
-        height.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    int h = Integer.parseInt(heightField.getText());
-                    stamp.setHeight(h);
-                    resetSImage();
-                    largest.reset();
-                }catch (NumberFormatException e1){
-                    setWarningText("Input an integer");
-                }
-                heightField.setText(String.valueOf(stamp.getHeight()));
-            }
-        });
-        return height;
-    }
-
-    private JButton createWidthB(JTextField widthField) {
-        JButton width = new JButton("Set Width");
-        width.addActionListener(new ActionListener() {
+        addRight(widthField);
+        JButton wb = new JButton("Set Width");
+        addLeft(wb);
+        Action wa = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
                     int w = Integer.parseInt(widthField.getText());
                     stamp.setWidth(w);
-                    resetSImage();
-                    largest.reset();
+                    ifNotCycling();
                 }catch (NumberFormatException e1){
                     setWarningText("Input an integer");
                 }
                 widthField.setText(String.valueOf(stamp.getWidth()));
             }
-        });
-        return width;
+        };
+        widthField.addActionListener(wa);
+        wb.addActionListener(wa);
+        actionList.add(wa);
+
+        JTextField heightField = new JTextField(String.valueOf(stamp.getHeight()));
+        addRight(heightField);
+        JButton hb = new JButton("Set Height");
+        addLeft(hb);
+        Action ha = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int h = Integer.parseInt(heightField.getText());
+                    stamp.setHeight(h);
+                    ifNotCycling();
+                }catch (NumberFormatException e1){
+                    setWarningText("Input an integer");
+                }
+                heightField.setText(String.valueOf(stamp.getHeight()));
+            }
+        };
+        heightField.addActionListener(ha);
+        hb.addActionListener(ha);
+        actionList.add(ha);
     }
 
     private void addWarning(){
         c.gridx = 0;
-        c.gridy = 0;
+        c.gridy = left++;
+        right++;
+        c.gridwidth = 3;
         warning.setBackground(Largest.BACKGROUND);
         warning.setForeground(Largest.BACKGROUND);
         warning.setText("filler");
-        this.add(warning, c);
+        add(warning, c);
+        c.gridwidth = 1;
     }
 
     private void addNudges(){
         JButton nup = createnup();
+        addLeft(nup);
         JButton ndown = createndown();
+        addLeft(ndown);
         JButton nleft = createnleft();
+        addRight(nleft);
         JButton nright = createnright();
-
-        c.gridx = 0;
-        c.gridy = 3;
-        this.add(nup, c);
-        c.gridy = 4;
-        this.add(ndown, c);
-        c.gridx = 2;
-        c.gridy = 3;
-        this.add(nleft, c);
-        c.gridy = 4;
-        this.add(nright, c);
+        addRight(nright);
     }
 
     private JButton createnup(){
@@ -667,20 +748,53 @@ public class MainPanel extends JPanel implements ShapeTab{
 
     private void addOffsets(){
         xOff = new JTextField(String.valueOf(stamp.getxOffset()));
-        JButton xOffB = createxOffB();
-        yOff = new JTextField(String.valueOf(stamp.getyOffset()));
-        JButton yOffB = createyOffB();
+        addRight(xOff);
+        JButton xOffB = new JButton("Set X Offset");
+        addLeft(xOffB);
+        Action xa = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int xo = Integer.parseInt(xOff.getText());
+                    stamp.setxOffset(xo);
+                    ifNotCycling();
+                }catch (NumberFormatException e1){
+                    setWarningText("Input an integer");
+                }
+                xOff.setText(String.valueOf(stamp.getxOffset()));
+            }
+        };
+        xOff.addActionListener(xa);
+        xOffB.addActionListener(xa);
+        actionList.add(xa);
 
-        c.gridx = 0;
-        c.gridy = 1;
-        this.add(xOffB, c);
-        c.gridy = 2;
-        this.add(yOffB, c);
-        c.gridx = 2;
-        c.gridy = 1;
-        this.add(xOff, c);
-        c.gridy = 2;
-        this.add(yOff, c);
+        yOff = new JTextField(String.valueOf(stamp.getyOffset()));
+        addRight(yOff);
+        JButton yOffB = new JButton("Set Y Offset");
+        addLeft(yOffB);
+        Action ya = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int yo = Integer.parseInt(yOff.getText());
+                    stamp.setyOffset(yo);
+                    ifNotCycling();
+                }catch (NumberFormatException e1){
+                    setWarningText("Input an integer");
+                }
+                yOff.setText(String.valueOf(stamp.getyOffset()));
+            }
+        };
+        yOff.addActionListener(ya);
+        yOffB.addActionListener(ya);
+        actionList.add(ya);
+    }
+
+    private void ifNotCycling(){
+        if(!cycling){
+            resetSImage();
+            largest.reset();
+        }
     }
 
     private JButton createyOffB() {
@@ -702,26 +816,6 @@ public class MainPanel extends JPanel implements ShapeTab{
         return yOff;
     }
 
-    private JButton createxOffB() {
-        JButton xOff = new JButton("Set X Offset");
-        xOff.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    int xo = Integer.parseInt(xOff.getText());
-                    stamp.setxOffset(xo);
-                    resetSImage();
-                    largest.reset();
-                }catch (NumberFormatException e1){
-                    setWarningText("Input an integer");
-                }
-                xOff.setText(String.valueOf(stamp.getxOffset()));
-            }
-        });
-        return xOff;
-    }
-
-
 
     private void addSpacers() {
         JLabel x1 = new JLabel();
@@ -732,17 +826,16 @@ public class MainPanel extends JPanel implements ShapeTab{
         c.weightx = 0.2;
         c.weighty = 1.0;
         c.fill = GridBagConstraints.BOTH;
-        this.add(x1, c);
+        add(x1, c);
 
         JLabel y12 = new JLabel();
         y12.setBackground(Largest.BACKGROUND);
         c.gridx = 0;
-        c.gridy = 12;
+        c.gridy = 13;
         c.gridwidth = 3;
         c.gridheight = 1;
 
-        this.add(y12, c);
-
+        add(y12, c);
     }
 
     private void setWarningText(String text){

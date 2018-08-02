@@ -31,10 +31,7 @@ public class LPanel extends JPanel implements ShapeTab{
     private Stack<Integer> dStack = new Stack<>();
     private boolean cycling = false;
     private ArrayList<Action> actionList = new ArrayList<>();
-    private JPanel top = new JPanel();
-    private GridBagConstraints topC = new GridBagConstraints();
-    private JPanel bottom = new JPanel();
-    private GridBagConstraints bottomC = new GridBagConstraints();
+    private GridBagConstraints c = new GridBagConstraints();
 
     LPanel(Largest largest){
         super();
@@ -48,31 +45,16 @@ public class LPanel extends JPanel implements ShapeTab{
     private void initPanels(){
         setLayout(new GridBagLayout());
         setBackground(Largest.BACKGROUND);
-        top.setLayout(new GridBagLayout());
-        top.setBackground(Largest.BACKGROUND);
-        bottom.setLayout(new GridBagLayout());
-        bottom.setBackground(Largest.BACKGROUND);
-
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.BOTH;
-        c.gridx = 0;
-        c.gridy = 1;
-        c.weightx = 1.0;
-        c.weighty = 0.1;
-        add(bottom, c);
-        c.gridy = 0;
-        c.weighty = 0.9;
-        add(top, c);
     }
 
     private void updateFields(){
-        top.removeAll();
-        bottom.removeAll();
+        removeAll();
         actionList.clear();
-
-        topC.insets = new Insets(1, 1, 1, 1);
+        c.insets = new Insets(1, 1, 1, 1);
         addWarning();
-        topC.fill = GridBagConstraints.HORIZONTAL;
+        c.fill = GridBagConstraints.BOTH;
+        c.gridwidth = 1;
+        c.gridheight = 1;
         addReps();
         addAxiom();
         addF();
@@ -87,12 +69,6 @@ public class LPanel extends JPanel implements ShapeTab{
         addThree();
         addStroke();
         addResolution();
-
-        bottomC.fill = GridBagConstraints.HORIZONTAL;
-        bottomC.insets = new Insets(1, 1, 1, 1);
-        bottomC.gridwidth = 1;
-        bottomC.gridheight = 1;
-        bottomC.weightx = 0.4;
         addStampify();
         addRandom();
         addDraw();
@@ -104,29 +80,27 @@ public class LPanel extends JPanel implements ShapeTab{
 //        System.out.println();
     }
 
-    private void getLabel(String s, int y){
-        JLabel label = new JLabel(s);
-        label.setBackground(Largest.BACKGROUND);
-        label.setForeground(Color.WHITE);
-        label.setHorizontalAlignment(JLabel.RIGHT);
+    private JButton getButton(String s, int y){
+        JButton button = new JButton(s);
 
-        topC.gridx = 0;
-        topC.gridy = y;
-        topC.weightx = 0.1;
-        top.add(label, topC);
+        c.gridx = 0;
+        c.gridy = y;
+        c.weightx = 0.4;
+        add(button, c);
+        return button;
     }
 
     private JTextField getField(String s, int y){
         JTextField field = new JTextField(s);
-        topC.gridx = 2;
-        topC.gridy = y;
-        topC.weightx = 0.7;
-        top.add(field, topC);
+        c.gridx = 2;
+        c.gridy = y;
+        c.weightx = 0.8;
+        add(field, c);
         return field;
     }
 
     private void addAxiom(){
-        getLabel("Axiom:", 2);
+        JButton b = getButton("Axiom", 2);
         JTextField rF = getField(axiom, 2);
         Action a = new AbstractAction() {
             @Override
@@ -147,10 +121,11 @@ public class LPanel extends JPanel implements ShapeTab{
 
         actionList.add(a);
         rF.addActionListener(a);
+        b.addActionListener(a);
     }
 
     private void addY(){
-        getLabel("Y:", 7);
+        JButton b = getButton("Y", 7);
         JTextField rF = getField(y, 7);
         Action a = new AbstractAction() {
             @Override
@@ -171,10 +146,11 @@ public class LPanel extends JPanel implements ShapeTab{
 
         actionList.add(a);
         rF.addActionListener(a);
+        b.addActionListener(a);
     }
 
     private void addX(){
-        getLabel("X:", 6);
+        JButton b = getButton("X", 6);
         JTextField rF = getField(x, 6);
         Action a = new AbstractAction() {
             @Override
@@ -195,10 +171,11 @@ public class LPanel extends JPanel implements ShapeTab{
 
         actionList.add(a);
         rF.addActionListener(a);
+        b.addActionListener(a);
     }
 
     private void addH(){
-        getLabel("H:", 5);
+        JButton b = getButton("H", 5);
         JTextField rF = getField(h, 5);
         Action a = new AbstractAction() {
             @Override
@@ -219,10 +196,11 @@ public class LPanel extends JPanel implements ShapeTab{
 
         actionList.add(a);
         rF.addActionListener(a);
+        b.addActionListener(a);
     }
 
     private void addG(){
-        getLabel("G:", 4);
+        JButton b = getButton("G", 4);
         JTextField rF = getField(g, 4);
         Action a = new AbstractAction() {
             @Override
@@ -243,10 +221,11 @@ public class LPanel extends JPanel implements ShapeTab{
 
         actionList.add(a);
         rF.addActionListener(a);
+        b.addActionListener(a);
     }
 
     private void addF(){
-        getLabel("F:", 3);
+        JButton b = getButton("F", 3);
         JTextField rF = getField(f, 3);
         Action a = new AbstractAction() {
             @Override
@@ -267,6 +246,7 @@ public class LPanel extends JPanel implements ShapeTab{
 
         actionList.add(a);
         rF.addActionListener(a);
+        b.addActionListener(a);
     }
 
     private boolean validInstruct(String s){
@@ -289,11 +269,11 @@ public class LPanel extends JPanel implements ShapeTab{
     }
 
     private void addThree(){
-        getLabel("Color 3", 12);
+        JButton b = getButton("Color 3", 12);
 
         JButton cButton = new JButton();
         cButton.setBackground(three);
-        cButton.addActionListener(new ActionListener() {
+        Action a = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Color newColor = JColorChooser.showDialog(
@@ -304,17 +284,19 @@ public class LPanel extends JPanel implements ShapeTab{
                     redraw();
                 }
             }
-        });
+        };
 
         addColorB(cButton, 12);
+        cButton.addActionListener(a);
+        b.addActionListener(a);
     }
 
     private void addTwo(){
-        getLabel("Color 2", 11);
+        JButton b = getButton("Color 2", 11);
 
         JButton cButton = new JButton();
         cButton.setBackground(two);
-        cButton.addActionListener(new ActionListener() {
+        Action a = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Color newColor = JColorChooser.showDialog(
@@ -325,17 +307,19 @@ public class LPanel extends JPanel implements ShapeTab{
                     redraw();
                 }
             }
-        });
+        };
 
         addColorB(cButton, 11);
+        cButton.addActionListener(a);
+        b.addActionListener(a);
     }
 
     private void addOne(){
-        getLabel("Color 1", 10);
+        JButton b = getButton("Color 1", 10);
 
         JButton cButton = new JButton();
         cButton.setBackground(one);
-        cButton.addActionListener(new ActionListener() {
+        Action a = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Color newColor = JColorChooser.showDialog(
@@ -346,16 +330,18 @@ public class LPanel extends JPanel implements ShapeTab{
                     redraw();
                 }
             }
-        });
+        };
 
         addColorB(cButton, 10);
+        cButton.addActionListener(a);
+        b.addActionListener(a);
     }
 
     private void addColorB(JButton cb, int y){
-        topC.gridx = 2;
-        topC.gridy = y;
-        topC.weightx = 0.6;
-        top.add(cb, topC);
+        c.gridx = 2;
+        c.gridy = y;
+        c.weightx = 0.4;
+        add(cb, c);
     }
 
     private void addDraw(){
@@ -382,13 +368,13 @@ public class LPanel extends JPanel implements ShapeTab{
         }
         draw.addActionListener(a);
 
-        bottomC.gridx = 2;
-        bottomC.gridy = 0;
-        bottom.add(draw, bottomC);
+        c.gridx = 2;
+        c.gridy = 14;
+        add(draw, c);
     }
 
     private void addStroke(){
-        getLabel("Stroke:", 13);
+        JButton b = getButton("Stroke", 13);
         JTextField rF = getField(String.valueOf(stroke), 13);
         Action a = new AbstractAction() {
             @Override
@@ -412,10 +398,11 @@ public class LPanel extends JPanel implements ShapeTab{
 
         actionList.add(a);
         rF.addActionListener(a);
+        b.addActionListener(a);
     }
 
     private void addMinus(){
-        getLabel("-:", 9);
+        JButton b = getButton("-", 9);
         JTextField rF = getField(String.valueOf(minus), 9);
         Action a = new AbstractAction() {
             @Override
@@ -435,10 +422,11 @@ public class LPanel extends JPanel implements ShapeTab{
 
         actionList.add(a);
         rF.addActionListener(a);
+        b.addActionListener(a);
     }
 
     private void addPlus(){
-        getLabel("+:", 8);
+        JButton b = getButton("+", 8);
         JTextField rF = getField(String.valueOf(plus), 8);
         Action a = new AbstractAction() {
             @Override
@@ -458,10 +446,11 @@ public class LPanel extends JPanel implements ShapeTab{
 
         actionList.add(a);
         rF.addActionListener(a);
+        b.addActionListener(a);
     }
 
     private void addReps(){
-        getLabel("Repetitions:", 1);
+        JButton b = getButton("Repetitions", 1);
         JTextField rF = getField(String.valueOf(depth), 1);
         Action a = new AbstractAction() {
             @Override
@@ -485,11 +474,12 @@ public class LPanel extends JPanel implements ShapeTab{
 
         actionList.add(a);
         rF.addActionListener(a);
+        b.addActionListener(a);
     }
 
     private void addResolution(){
-        getLabel("Resolution:", 14);
-        JTextField rF = getField(String.valueOf(xRes), 14);
+        JButton b = getButton("Resolution", 16);
+        JTextField rF = getField(String.valueOf(xRes), 16);
         Action a = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -515,43 +505,34 @@ public class LPanel extends JPanel implements ShapeTab{
 
         actionList.add(a);
         rF.addActionListener(a);
+        b.addActionListener(a);
     }
 
     private void addSpacers() {
         JLabel x1 = new JLabel();
         x1.setBackground(Largest.BACKGROUND);
-        topC.gridx = 1;
-        topC.gridy = 1;
-        topC.gridheight = 16;
-        topC.gridwidth = 1;
-        topC.weightx = 0.2;
-        topC.weighty = 1.0;
-        topC.fill = GridBagConstraints.BOTH;
-        top.add(x1, topC);
+        c.gridx = 1;
+        c.gridy = 1;
+        c.gridheight = 16;
+        c.gridwidth = 1;
+        c.weightx = 0.1;
+        c.weighty = 1.0;
+        c.fill = GridBagConstraints.BOTH;
+        add(x1, c);
 
-        JLabel x2 = new JLabel();
-        x2.setBackground(Largest.BACKGROUND);
-        bottomC.gridx = 1;
-        bottomC.gridy = 1;
-        bottomC.gridheight = 2;
-        bottomC.gridwidth = 1;
-        bottomC.weightx = 0.2;
-        bottomC.weighty = 1.0;
-        bottomC.fill = GridBagConstraints.BOTH;
-        bottom.add(x2, bottomC);
     }
 
     private void addWarning(){
-        topC.gridx = 0;
-        topC.gridy = 0;
-        topC.gridwidth = 3;
-        topC.gridheight = 1;
-        topC.weighty = 1.0;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.gridwidth = 3;
+        c.gridheight = 1;
+        c.weighty = 1.0;
         warning.setBackground(Largest.BACKGROUND);
         warning.setForeground(Largest.BACKGROUND);
         warning.setText("filler");
-        top.add(warning, topC);
-        topC.gridwidth = 1;
+        add(warning, c);
+        c.gridwidth = 1;
     }
 
     private void setWarningText(String text){
@@ -579,9 +560,9 @@ public class LPanel extends JPanel implements ShapeTab{
                 largest.stampify(image);
             }
         });
-        bottomC.gridx = 0;
-        bottomC.gridy = 1;
-        bottom.add(stampify, bottomC);
+        c.gridx = 0;
+        c.gridy = 15;
+        add(stampify, c);
     }
 
     private void addRandom(){
@@ -592,9 +573,9 @@ public class LPanel extends JPanel implements ShapeTab{
                 randomize();
             }
         });
-        bottomC.gridx = 2;
-        bottomC.gridy = 1;
-        bottom.add(r, bottomC);
+        c.gridx = 2;
+        c.gridy = 15;
+        add(r, c);
     }
 
     private void randomize(){

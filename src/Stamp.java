@@ -178,7 +178,7 @@ public class Stamp {
         if (depth > reps || depth > 99 || (!use1 && !use2)){
             return;
         }
-        int[][] next = copyArray(verb);
+        //int[][] next = copyArray(verb);
 
         if (use1){
             int xn1 = xo;
@@ -188,12 +188,12 @@ public class Stamp {
             yn1 += Math.sin((Math.PI * a1)/180)*d1;
             xn1 += Math.cos((Math.PI * a1)/180)*d1;
 
-            int[][] next1 = transformRec(next, true);
+            int[][] next1 = transformRec(verb, depth, true);
             if(!onlyLeaf || depth == reps){
                 stamp(next1, image, xn1, yn1);
             }
 
-            repTemp(depth + 1, next1, image, xn1, yn1, a1);
+            repTemp(depth + 1, verb, image, xn1, yn1, a1);
         }
 
         if (use2){
@@ -205,11 +205,11 @@ public class Stamp {
             yn2 += Math.sin((Math.PI * a2)/180)*d2;
             xn2 += Math.cos((Math.PI * a2)/180)*d2;
 
-            int[][] next2 = transformRec(next, false);
+            int[][] next2 = transformRec(verb, depth,  false);
             if(!onlyLeaf || depth == reps){
                 stamp(next2, image, xn2, yn2);
             }
-            repTemp(depth + 1, next2, image, xn2, yn2, a2);
+            repTemp(depth + 1, verb, image, xn2, yn2, a2);
         }
     }
 
@@ -251,7 +251,7 @@ public class Stamp {
 //        return transform(orig, at);
 //    }
 
-    private int[][] transformRec(int[][] orig, boolean positive){
+    private int[][] transformRec(int[][] orig, int depth, boolean positive){
         int theta;
         if(positive){
             theta = spinRate1;
@@ -259,12 +259,16 @@ public class Stamp {
             theta = spinRate2;
         }
 
+        theta *= depth%360;
+
         double scale;
         if(positive){
             scale = scale1;
         }else{
             scale = scale2;
         }
+
+        scale = Math.pow(scale, depth);
 
         if (scale == 1.0 && theta == 0){
             return copyArray(orig);
@@ -305,7 +309,7 @@ public class Stamp {
         try {
             at.invert();
         } catch (NoninvertibleTransformException e) {
-            e.printStackTrace();
+            System.out.println("tranform() in Stamp.java:  " + e.getMessage());
             return orig;
         }
 
@@ -357,7 +361,7 @@ public class Stamp {
                 for(int y = 0; y < yRes; y++){
                     int c = orig[x][y];
                     int alph = c >> 24 & 0xFF;
-                    if (alph < minAlpha){
+                    if (alph <= minAlpha){
                         next[x][y] = 0;
                     }else if (alph >= fillAlpha){
                         int a = 255;
@@ -520,16 +524,16 @@ public class Stamp {
         return xshear;
     }
 
-    public void setXshear(double xshear) {
-        this.xshear = xshear;
+    public void setXshear(double xs) {
+        xshear = xs;
     }
 
     public double getYshear() {
         return yshear;
     }
 
-    public void setYshear(double yshear) {
-        this.yshear = yshear;
+    public void setYshear(double ys) {
+        yshear = ys;
     }
 
     public boolean isEmpty() {

@@ -4,7 +4,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 
-class DrawingPanel extends JPanel {
+public class DrawingPanel extends JPanel {
     private final CanvasPanel canvasPanel;
     static final int MARGIN = 100;
 

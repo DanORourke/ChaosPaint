@@ -6,7 +6,7 @@ import java.awt.*;
 import java.awt.image.*;
 import java.io.File;
 
-class Largest extends JFrame{
+public class Largest extends JFrame{
     static final Color BACKGROUND = new Color(100, 100, 100);
     private final CanvasPanel canvasPanel = new CanvasPanel();
     private JTabbedPane tabbed = new JTabbedPane();
@@ -41,7 +41,7 @@ class Largest extends JFrame{
         add(split);
         revalidate();
         //split.setDividerLocation(7*split.getWidth()/10);
-        split.setDividerLocation(split.getWidth() - tabbed.getPreferredSize().width);
+        split.setDividerLocation(split.getWidth() - tabbed.getPreferredSize().width - 20);
     }
 
     private JPanel addScroll(){
@@ -94,7 +94,7 @@ class Largest extends JFrame{
         tabbed.addTab("Stamp", spanel);
         tabbed.addTab("Chaos", new ChaosPanel(this));
         tabbed.addTab("L-System", new LPanel(this));
-        tabbed.addTab("Box", new BoxPanel(this));
+        //tabbed.addTab("Box", new BoxPanel(this));
         tabbed.addTab("Julia", new JuliaPanel(this));
         tabbed.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {

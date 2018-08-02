@@ -1,5 +1,5 @@
 
-class ComplexNumber {
+public class ComplexNumber {
     private double real = 0.0;
     private double imaginary = 0.0;
     private boolean undefined = false;
