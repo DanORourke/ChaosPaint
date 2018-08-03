@@ -126,7 +126,7 @@ public class MainPanel extends JPanel implements ShapeTab{
         };
         resField.addActionListener(ra);
         resBtn.addActionListener(ra);
-        actionList.add(ra);
+        //actionList.add(ra);
 
         c.gridx = 0;
         c.gridy = 22;

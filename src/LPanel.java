@@ -346,7 +346,7 @@ public class LPanel extends JPanel implements ShapeTab{
 
     private void addDraw(){
 
-        JButton draw = new JButton("Draw");
+        JButton draw = new JButton("Redraw");
         Action a = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {

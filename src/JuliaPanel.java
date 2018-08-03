@@ -37,6 +37,11 @@ public class JuliaPanel extends JPanel implements ShapeTab{
     private int xRes;
     private int yRes;
     private BufferedImage image;
+    private int left = 0;
+    private int right = 0;
+    private boolean cycling = false;
+    private ArrayList<Action> actionList = new ArrayList<>();
+    private JLabel instruct;
 
     JuliaPanel(Largest largest){
         super();
@@ -73,17 +78,31 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         c.gridheight = 1;
         removeAll();
         addWarning();
+        addInstruct();
         addC1Z1();
         addC2Z2();
         addC3();
-        addChecks();
         addIterations();
-        addResolution();
+        addChecks();
         setInColor();
         setOutColor();
+        addRedraw();
         addStampify();
         addRandom();
+        addResolution();
         addSpacers();
+    }
+
+    private void addLeft(Component com){
+        c.gridx = 0;
+        c.gridy = left++;
+        add(com, c);
+    }
+
+    private void addRight(Component com){
+        c.gridx = 2;
+        c.gridy = right++;
+        add(com, c);
     }
 
 
@@ -104,6 +123,26 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         this.add(x1, c);
     }
 
+    private void addRedraw(){
+        JButton r = new JButton("Redraw");
+        addRight(r);
+        left++;
+        r.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cycling = true;
+                for(ActionListener a : actionList){
+                    a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {
+                        //Nothing need go here, the actionPerformed method (with the
+                        //above arguments) will trigger the respective listener
+                    });
+                }
+                cycling = false;
+                redraw();
+            }
+        });
+    }
+
     private void addRandom(){
         JButton rBtn = new JButton("Random");
         rBtn.addActionListener(new ActionListener() {
@@ -112,9 +151,7 @@ public class JuliaPanel extends JPanel implements ShapeTab{
                 randomize();
             }
         });
-        c.gridx = 2;
-        c.gridy = 16;
-        add(rBtn, c);
+        addRight(rBtn);
     }
 
     private void randomize(){
@@ -147,15 +184,15 @@ public class JuliaPanel extends JPanel implements ShapeTab{
                 largest.stampify(image);
             }
         });
-        c.gridx = 0;
-        c.gridy = 16;
-        add(stampify, c);
+        addLeft(stampify);
     }
 
     private void addIterations(){
         JTextField itField = new JTextField(String.valueOf(iterations));
+        addRight(itField);
         JButton itBtn = new JButton("Iterations");
-        itBtn.addActionListener(new ActionListener() {
+        addLeft(itBtn);
+        Action a = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -171,19 +208,18 @@ public class JuliaPanel extends JPanel implements ShapeTab{
                 }
                 itField.setText(String.valueOf(iterations));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 10;
-        add(itBtn, c);
-        c.gridx = 2;
-        add(itField, c);
+        };
+        itField.addActionListener(a);
+        itBtn.addActionListener(a);
+        actionList.add(a);
     }
 
     private void addResolution(){
         JTextField resField = new JTextField(String.valueOf(xRes));
+        addRight(resField);
         JButton resBtn = new JButton("Resolution");
-        resBtn.addActionListener(new ActionListener() {
+        addLeft(resBtn);
+        Action a = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -202,30 +238,30 @@ public class JuliaPanel extends JPanel implements ShapeTab{
                 }
                 resField.setText(String.valueOf(xRes));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 17;
-        add(resBtn, c);
-        c.gridx = 2;
-        add(resField, c);
+        };
+        resField.addActionListener(a);
+        resBtn.addActionListener(a);
+        actionList.add(a);
     }
 
-    private void addChecks(){
-        JLabel instruct = new JLabel(getInstructText());
+    private void addInstruct(){
+        instruct = new JLabel(getInstructText());
         instruct.setBackground(Largest.BACKGROUND);
         instruct.setForeground(Color.white);
         c.gridx = 0;
-        c.gridy = 1;
+        c.gridy = left++;
         c.gridwidth = 3;
         add(instruct, c);
         c.gridwidth = 1;
+        right++;
+    }
 
+    private void addChecks(){
         JCheckBox inverseCheck = new JCheckBox("1/F(z)");
+        addLeft(inverseCheck);
         inverseCheck.setSelected(inverse);
         inverseCheck.setBackground(Largest.BACKGROUND);
         inverseCheck.setForeground(Color.WHITE);
-
         inverseCheck.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -236,10 +272,10 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         });
 
         JCheckBox rationalCheck = new JCheckBox("Z1/Z2");
+        addRight(rationalCheck);
         rationalCheck.setSelected(rational);
         rationalCheck.setBackground(Largest.BACKGROUND);
         rationalCheck.setForeground(Color.WHITE);
-
         rationalCheck.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -248,13 +284,6 @@ public class JuliaPanel extends JPanel implements ShapeTab{
                 redraw();
             }
         });
-
-        c.gridx = 0;
-        c.gridy = 11;
-        add(inverseCheck, c);
-        c.gridx = 2;
-        c.gridy = 11;
-        add(rationalCheck, c);
     }
 
     private String getInstructText(){
@@ -270,11 +299,15 @@ public class JuliaPanel extends JPanel implements ShapeTab{
 
     private void addC1Z1(){
         JTextField c1RealField = new JTextField(String.valueOf(c1Real));
+        addRight(c1RealField);
         JTextField c1ImaginaryField = new JTextField(String.valueOf(c1Imaginary));
+        addRight(c1ImaginaryField);
         JTextField z1Field = new JTextField(String.valueOf(z1Power));
+        addRight(z1Field);
 
         JButton c1RealBtn = new JButton("C1 Real");
-        c1RealBtn.addActionListener(new ActionListener() {
+        addLeft(c1RealBtn);
+        Action acr = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -285,10 +318,14 @@ public class JuliaPanel extends JPanel implements ShapeTab{
                 }
                 c1RealField.setText(String.valueOf(c1Real));
             }
-        });
+        };
+        c1RealField.addActionListener(acr);
+        c1RealBtn.addActionListener(acr);
+        actionList.add(acr);
 
         JButton c1ImaginaryBtn = new JButton("C1 Imaginary");
-        c1ImaginaryBtn.addActionListener(new ActionListener() {
+        addLeft(c1ImaginaryBtn);
+        Action aci = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -299,10 +336,14 @@ public class JuliaPanel extends JPanel implements ShapeTab{
                 }
                 c1ImaginaryField.setText(String.valueOf(c1Imaginary));
             }
-        });
+        };
+        c1ImaginaryField.addActionListener(aci);
+        c1ImaginaryBtn.addActionListener(aci);
+        actionList.add(aci);
 
         JButton z1Btn = new JButton("Z1 Power");
-        z1Btn.addActionListener(new ActionListener() {
+        addLeft(z1Btn);
+        Action az = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -313,32 +354,24 @@ public class JuliaPanel extends JPanel implements ShapeTab{
                 }
                 z1Field.setText(String.valueOf(z1Power));
             }
-        });
+        };
+        z1Field.addActionListener(az);
+        z1Btn.addActionListener(az);
+        actionList.add(az);
 
-        c.gridx = 0;
-        c.gridy = 2;
-        add(c1RealBtn, c);
-        c.gridx = 2;
-        add(c1RealField, c);
-        c.gridx = 0;
-        c.gridy = 3;
-        add(c1ImaginaryBtn, c);
-        c.gridx = 2;
-        add(c1ImaginaryField, c);
-        c.gridx = 0;
-        c.gridy = 4;
-        add(z1Btn, c);
-        c.gridx = 2;
-        add(z1Field, c);
     }
 
     private void addC2Z2(){
         JTextField c2RealField = new JTextField(String.valueOf(c2Real));
+        addRight(c2RealField);
         JTextField c2ImaginaryField = new JTextField(String.valueOf(c2Imaginary));
+        addRight(c2ImaginaryField);
         JTextField z2Field = new JTextField(String.valueOf(z2Power));
+        addRight(z2Field);
 
         JButton c2RealBtn = new JButton("C2 Real");
-        c2RealBtn.addActionListener(new ActionListener() {
+        addLeft(c2RealBtn);
+        Action acr = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -349,10 +382,14 @@ public class JuliaPanel extends JPanel implements ShapeTab{
                 }
                 c2RealField.setText(String.valueOf(c2Real));
             }
-        });
+        };
+        c2RealField.addActionListener(acr);
+        c2RealBtn.addActionListener(acr);
+        actionList.add(acr);
 
         JButton c2ImaginaryBtn = new JButton("C2 Imaginary");
-        c2ImaginaryBtn.addActionListener(new ActionListener() {
+        addLeft(c2ImaginaryBtn);
+        Action aci = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -363,10 +400,15 @@ public class JuliaPanel extends JPanel implements ShapeTab{
                 }
                 c2ImaginaryField.setText(String.valueOf(c2Imaginary));
             }
-        });
+        };
+
+        c2ImaginaryField.addActionListener(aci);
+        c2ImaginaryBtn.addActionListener(aci);
+        actionList.add(aci);
 
         JButton z2Btn = new JButton("Z2 Power");
-        z2Btn.addActionListener(new ActionListener() {
+        addLeft(z2Btn);
+        Action az = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -377,31 +419,22 @@ public class JuliaPanel extends JPanel implements ShapeTab{
                 }
                 z2Field.setText(String.valueOf(z2Power));
             }
-        });
+        };
 
-        c.gridx = 0;
-        c.gridy = 5;
-        add(c2RealBtn, c);
-        c.gridx = 2;
-        add(c2RealField, c);
-        c.gridx = 0;
-        c.gridy = 6;
-        add(c2ImaginaryBtn, c);
-        c.gridx = 2;
-        add(c2ImaginaryField, c);
-        c.gridx = 0;
-        c.gridy = 7;
-        add(z2Btn, c);
-        c.gridx = 2;
-        add(z2Field, c);
+        z2Field.addActionListener(az);
+        z2Btn.addActionListener(az);
+        actionList.add(az);
     }
 
     private void addC3(){
         JTextField c3RealField = new JTextField(String.valueOf(c3Real));
+        addRight(c3RealField);
         JTextField c3ImaginaryField = new JTextField(String.valueOf(c3Imaginary));
+        addRight(c3ImaginaryField);
 
         JButton c3RealBtn = new JButton("C3 Real");
-        c3RealBtn.addActionListener(new ActionListener() {
+        addLeft(c3RealBtn);
+        Action ar = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -412,10 +445,14 @@ public class JuliaPanel extends JPanel implements ShapeTab{
                 }
                 c3RealField.setText(String.valueOf(c3Real));
             }
-        });
+        };
+        c3RealField.addActionListener(ar);
+        c3RealBtn.addActionListener(ar);
+        actionList.add(ar);
 
         JButton c3ImaginaryBtn = new JButton("C3 Imaginary");
-        c3ImaginaryBtn.addActionListener(new ActionListener() {
+        addLeft(c3ImaginaryBtn);
+        Action ai = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -426,18 +463,10 @@ public class JuliaPanel extends JPanel implements ShapeTab{
                 }
                 c3ImaginaryField.setText(String.valueOf(c3Imaginary));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 8;
-        add(c3RealBtn, c);
-        c.gridx = 2;
-        add(c3RealField, c);
-        c.gridx = 0;
-        c.gridy = 9;
-        add(c3ImaginaryBtn, c);
-        c.gridx = 2;
-        add(c3ImaginaryField, c);
+        };
+        c3ImaginaryField.addActionListener(ai);
+        c3ImaginaryBtn.addActionListener(ai);
+        actionList.add(ai);
     }
 
     private void addInColor(Color c){
@@ -470,7 +499,8 @@ public class JuliaPanel extends JPanel implements ShapeTab{
 
     private void addWarning(){
         c.gridx = 0;
-        c.gridy = 0;
+        c.gridy = left++;
+        right++;
         c.gridwidth = 3;
         warning.setBackground(Largest.BACKGROUND);
         warning.setForeground(Largest.BACKGROUND);
@@ -498,11 +528,14 @@ public class JuliaPanel extends JPanel implements ShapeTab{
 
     private void setOutColor(){
         c.gridx = 0;
-        c.gridy = 14;
+        c.gridy = left++;
         c.gridwidth = 3;
         add(outPanel, c);
+        right++;
+        c.gridwidth = 1;
 
         JButton adColor = new JButton("Add outColor");
+        addLeft(adColor);
         adColor.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -517,6 +550,7 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         });
 
         JButton remColor = new JButton("Remove outColor");
+        addRight(remColor);
         remColor.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -525,13 +559,6 @@ public class JuliaPanel extends JPanel implements ShapeTab{
                 }
             }
         });
-
-        c.gridy = 15;
-        c.gridwidth = 1;
-        add(adColor, c);
-
-        c.gridx = 2;
-        add(remColor, c);
     }
 
     private Image getOutImage(){
@@ -560,11 +587,14 @@ public class JuliaPanel extends JPanel implements ShapeTab{
 
     private void setInColor(){
         c.gridx = 0;
-        c.gridy = 12;
+        c.gridy = left++;
         c.gridwidth = 3;
         add(inPanel, c);
+        right++;
+        c.gridwidth = 1;
 
         JButton adColor = new JButton("Add inColor");
+        addLeft(adColor);
         adColor.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -579,6 +609,7 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         });
 
         JButton remColor = new JButton("Remove inColor");
+        addRight(remColor);
         remColor.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -587,16 +618,12 @@ public class JuliaPanel extends JPanel implements ShapeTab{
                 }
             }
         });
-
-        c.gridy = 13;
-        c.gridwidth = 1;
-        add(adColor, c);
-
-        c.gridx = 2;
-        add(remColor, c);
     }
 
-    public void redraw(){
+    private void redraw(){
+        if(cycling){
+            return;
+        }
         initOutColorMap();
         initInColorMap();
 

@@ -25,6 +25,10 @@ public class ChaosPanel extends JPanel implements ShapeTab{
     private int xRes;
     private int yRes;
     private BufferedImage image;
+    private int left = 0;
+    private int right = 0;
+    private boolean cycling = false;
+    private ArrayList<Action> actionList = new ArrayList<>();
 
     ChaosPanel(Largest largest){
         super();
@@ -63,6 +67,7 @@ public class ChaosPanel extends JPanel implements ShapeTab{
         addShow();
         addBlend();
         setColor();
+        addRedraw();
         addStampify();
         addRandom();
         addResolution();
@@ -70,58 +75,67 @@ public class ChaosPanel extends JPanel implements ShapeTab{
         initColorMap();
     }
 
+    private void addLeft(Component com){
+        c.gridx = 0;
+        c.gridy = left++;
+        add(com, c);
+    }
+
+    private void addRight(Component com){
+        c.gridx = 2;
+        c.gridy = right++;
+        add(com, c);
+    }
+
     private void addRules3(){
         JTextField r3Field = new JTextField(getPastString(past.get(2)));
+        addRight(r3Field);
         JButton r3Btn = new JButton("-3 Rules");
-        r3Btn.addActionListener(new ActionListener() {
+        addLeft(r3Btn);
+        Action a = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 pastInput(2, r3Field.getText());
                 r3Field.setText(getPastString(past.get(2)));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 6;
-        add(r3Btn, c);
-        c.gridx = 2;
-        add(r3Field, c);
+        };
+        r3Field.addActionListener(a);
+        r3Btn.addActionListener(a);
+        actionList.add(a);
     }
 
     private void addRules2(){
         JTextField r2Field = new JTextField(getPastString(past.get(1)));
+        addRight(r2Field);
         JButton r2Btn = new JButton("-2 Rules");
-        r2Btn.addActionListener(new ActionListener() {
+        addLeft(r2Btn);
+        Action a = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 pastInput(1, r2Field.getText());
                 r2Field.setText(getPastString(past.get(1)));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 5;
-        add(r2Btn, c);
-        c.gridx = 2;
-        add(r2Field, c);
+        };
+        r2Field.addActionListener(a);
+        r2Btn.addActionListener(a);
+        actionList.add(a);
     }
 
     private void addRules1(){
         JTextField r1Field = new JTextField(getPastString(past.get(0)));
+        addRight(r1Field);
         JButton r1Btn = new JButton("-1 Rules");
-        r1Btn.addActionListener(new ActionListener() {
+        addLeft(r1Btn);
+        Action a = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 pastInput(0, r1Field.getText());
                 r1Field.setText(getPastString(past.get(0)));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 4;
-        add(r1Btn, c);
-        c.gridx = 2;
-        add(r1Field, c);
+        };
+        r1Field.addActionListener(a);
+        r1Btn.addActionListener(a);
+        actionList.add(a);
     }
 
     private void pastInput(int index, String input){
@@ -179,8 +193,10 @@ public class ChaosPanel extends JPanel implements ShapeTab{
 
     private void addGravity(){
         JTextField gField = new JTextField(String.valueOf(gravity));
+        addRight(gField);
         JButton gBtn = new JButton("Gravity");
-        gBtn.addActionListener(new ActionListener() {
+        addLeft(gBtn);
+        Action a = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -196,13 +212,10 @@ public class ChaosPanel extends JPanel implements ShapeTab{
                 }
                 gField.setText(String.valueOf(gravity));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 3;
-        add(gBtn, c);
-        c.gridx = 2;
-        add(gField, c);
+        };
+        gField.addActionListener(a);
+        gBtn.addActionListener(a);
+        actionList.add(a);
     }
 
     private void addBlend(){
@@ -219,9 +232,7 @@ public class ChaosPanel extends JPanel implements ShapeTab{
             }
         });
 
-        c.gridx = 2;
-        c.gridy = 9;
-        add(showCheck, c);
+        addRight(showCheck);
     }
 
     private void addShow(){
@@ -238,15 +249,15 @@ public class ChaosPanel extends JPanel implements ShapeTab{
             }
         });
 
-        c.gridx = 0;
-        c.gridy = 9;
-        add(showCheck, c);
+        addLeft(showCheck);
     }
 
     private void addPSize(){
         JTextField pField = new JTextField(String.valueOf(pointSize));
+        addRight(pField);
         JButton pBtn = new JButton("Point Size");
-        pBtn.addActionListener(new ActionListener() {
+        addLeft(pBtn);
+        Action a = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -262,19 +273,18 @@ public class ChaosPanel extends JPanel implements ShapeTab{
                 }
                 pField.setText(String.valueOf(pointSize));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 8;
-        add(pBtn, c);
-        c.gridx = 2;
-        add(pField, c);
+        };
+        pField.addActionListener(a);
+        pBtn.addActionListener(a);
+        actionList.add(a);
     }
 
     private void addVSize(){
         JTextField vField = new JTextField(String.valueOf(vertexSize));
+        addRight(vField);
         JButton vBtn = new JButton("Vertex Size");
-        vBtn.addActionListener(new ActionListener() {
+        addLeft(vBtn);
+        Action a = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -290,19 +300,18 @@ public class ChaosPanel extends JPanel implements ShapeTab{
                 }
                 vField.setText(String.valueOf(vertexSize));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 7;
-        add(vBtn, c);
-        c.gridx = 2;
-        add(vField, c);
+        };
+        vField.addActionListener(a);
+        vBtn.addActionListener(a);
+        actionList.add(a);
     }
 
     private void addReps(){
         JTextField repField = new JTextField(String.valueOf(reps));
+        addRight(repField);
         JButton repBtn = new JButton("Iterations");
-        repBtn.addActionListener(new ActionListener() {
+        addLeft(repBtn);
+        Action a = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -318,19 +327,18 @@ public class ChaosPanel extends JPanel implements ShapeTab{
                 }
                 repField.setText(String.valueOf(reps));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 2;
-        add(repBtn, c);
-        c.gridx = 2;
-        add(repField, c);
+        };
+        repField.addActionListener(a);
+        repBtn.addActionListener(a);
+        actionList.add(a);
     }
 
     private void addNumberSides(){
         JTextField sizeField = new JTextField(String.valueOf(size));
-        JButton sizeBtn = new JButton("Number of Vertex");
-        sizeBtn.addActionListener(new ActionListener() {
+        addRight(sizeField);
+        JButton sizeBtn = new JButton("Vertices");
+        addLeft(sizeBtn);
+        Action a = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -341,7 +349,9 @@ public class ChaosPanel extends JPanel implements ShapeTab{
                         size = s;
                         fixPast();
                         fixColors();
-                        updateFields();
+                        if(!cycling){
+                            updateFields();
+                        }
                         redraw();
                     }
                 }catch (NumberFormatException e1){
@@ -349,13 +359,10 @@ public class ChaosPanel extends JPanel implements ShapeTab{
                 }
                 sizeField.setText(String.valueOf(size));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 1;
-        add(sizeBtn, c);
-        c.gridx = 2;
-        add(sizeField, c);
+        };
+        sizeField.addActionListener(a);
+        sizeBtn.addActionListener(a);
+        actionList.add(a);
     }
 
     private void fixColors(){
@@ -378,7 +385,8 @@ public class ChaosPanel extends JPanel implements ShapeTab{
 
     private void addWarning(){
         c.gridx = 0;
-        c.gridy = 0;
+        c.gridy = left++;
+        right++;
         c.gridwidth = 3;
         warning.setBackground(Largest.BACKGROUND);
         warning.setForeground(Largest.BACKGROUND);
@@ -412,6 +420,9 @@ public class ChaosPanel extends JPanel implements ShapeTab{
     }
 
     private void redraw(){
+        if(cycling){
+            return;
+        }
         initColorMap();
         image = new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
         ArrayList<Vertex> vertex = createVertex();
@@ -649,9 +660,11 @@ public class ChaosPanel extends JPanel implements ShapeTab{
 
     private void setColor(){
         c.gridx = 0;
-        c.gridy = 10;
+        c.gridy = left++;
         c.gridwidth = 3;
         add(imagePanel, c);
+        right++;
+        c.gridwidth = 1;
 
         JButton adColor = new JButton("Add Color");
         adColor.addActionListener(new ActionListener() {
@@ -677,12 +690,8 @@ public class ChaosPanel extends JPanel implements ShapeTab{
             }
         });
 
-        c.gridy = 11;
-        c.gridwidth = 1;
-        add(adColor, c);
-
-        c.gridx = 2;
-        add(remColor, c);
+        addLeft(adColor);
+        addRight(remColor);
     }
 
     private Image getPanelImage(){
@@ -711,6 +720,26 @@ public class ChaosPanel extends JPanel implements ShapeTab{
         redraw();
     }
 
+    private void addRedraw(){
+        JButton rd = new JButton("Redraw");
+        rd.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cycling = true;
+                for(ActionListener a : actionList){
+                    a.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null) {
+                        //Nothing need go here, the actionPerformed method (with the
+                        //above arguments) will trigger the respective listener
+                    });
+                }
+                cycling = false;
+                redraw();
+            }
+        });
+        addRight(rd);
+        left++;
+    }
+
     private void addStampify(){
         JButton stampify = new JButton("Stampify");
         stampify.addActionListener(new ActionListener() {
@@ -719,9 +748,7 @@ public class ChaosPanel extends JPanel implements ShapeTab{
                 largest.stampify(image);
             }
         });
-        c.gridx = 0;
-        c.gridy = 12;
-        add(stampify, c);
+        addLeft(stampify);
     }
 
     private void addRandom(){
@@ -732,9 +759,7 @@ public class ChaosPanel extends JPanel implements ShapeTab{
                 randomize();
             }
         });
-        c.gridx = 2;
-        c.gridy = 12;
-        add(r, c);
+        addRight(r);
     }
 
     private void randomize(){
@@ -785,8 +810,10 @@ public class ChaosPanel extends JPanel implements ShapeTab{
 
     private void addResolution(){
         JTextField resField = new JTextField(String.valueOf(xRes));
+        addRight(resField);
         JButton resBtn = new JButton("Resolution");
-        resBtn.addActionListener(new ActionListener() {
+        addLeft(resBtn);
+        Action a = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -805,13 +832,10 @@ public class ChaosPanel extends JPanel implements ShapeTab{
                 }
                 resField.setText(String.valueOf(xRes));
             }
-        });
-
-        c.gridx = 0;
-        c.gridy = 13;
-        add(resBtn, c);
-        c.gridx = 2;
-        add(resField, c);
+        };
+        resField.addActionListener(a);
+        resBtn.addActionListener(a);
+        actionList.add(a);
     }
 
     private void addSpacers() {
