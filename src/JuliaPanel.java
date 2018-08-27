@@ -97,7 +97,6 @@ public class JuliaPanel extends JPanel implements ShapeTab{
         c.gridx = 0;
         c.gridy = left++;
         add(com, c);
-        int y;
     }
 
     private void addRight(Component com){
